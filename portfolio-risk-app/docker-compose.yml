@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: portfolio-db
+    environment:
+      POSTGRES_USER: portfolio_user
+      POSTGRES_PASSWORD: portfolio_pass
+      POSTGRES_DB: portfolio_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - portfolio-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: portfolio-backend
+    environment:
+      DATABASE_URL: postgresql://portfolio_user:portfolio_pass@postgres:5432/portfolio_db
+      JWT_SECRET_KEY: your-secret-key-change-this-in-production
+      CORS_ORIGINS: http://localhost:3000
+      # Email Configuration - Set these values
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@portfolio-risk.com}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgres
+    networks:
+      - portfolio-network
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: portfolio-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - portfolio-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: portfolio-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - portfolio-network
+
+volumes:
+  postgres_data:
+
+networks:
+  portfolio-network:
+    driver: bridge
