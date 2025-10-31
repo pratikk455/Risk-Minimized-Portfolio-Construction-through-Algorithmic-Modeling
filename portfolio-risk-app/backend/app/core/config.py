@@ -74,9 +74,10 @@ class Settings(BaseSettings):
     COOKIE_SECURE: bool = True
 
     # Registration Flow
-    REQUIRE_EMAIL_VERIFICATION: bool = True
-    REQUIRE_PHONE_VERIFICATION: bool = True
-    REQUIRE_2FA_SETUP: bool = True
+    # Set to False for easier development (skip verification steps)
+    REQUIRE_EMAIL_VERIFICATION: bool = False
+    REQUIRE_PHONE_VERIFICATION: bool = False
+    REQUIRE_2FA_SETUP: bool = False
 
     # Environment
     ENVIRONMENT: str = "development"

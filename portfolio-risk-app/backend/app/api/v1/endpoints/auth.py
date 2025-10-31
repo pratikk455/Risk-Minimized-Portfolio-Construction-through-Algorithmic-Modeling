@@ -38,10 +38,10 @@ def log_auth_attempt(db: Session, user_id: Optional[int], ip_address: str,
         attempt = AuthAttempt(
             user_id=user_id,
             ip_address=ip_address,
-            action=action,
+            attempt_type=action,  # Map 'action' to 'attempt_type'
             success=success,
-            details=details,
-            timestamp=datetime.utcnow()
+            failure_reason=details if not success else None,  # Map 'details' to 'failure_reason'
+            attempted_at=datetime.utcnow()  # Use 'attempted_at' instead of 'timestamp'
         )
         db.add(attempt)
         db.commit()
@@ -97,20 +97,41 @@ async def register_step1(
         hashed_password = get_password_hash(registration_data.password)
         logger.info(f"Password hashed successfully")
 
+        # Check if verification is required
+        skip_verification = not settings.REQUIRE_EMAIL_VERIFICATION and not settings.REQUIRE_PHONE_VERIFICATION and not settings.REQUIRE_2FA_SETUP
+
         new_user = User(
             username=registration_data.username.lower(),
             email=registration_data.email,
             full_name=registration_data.full_name,
             phone_number=registration_data.phone_number,
             hashed_password=hashed_password,
-            registration_status="pending_email",
-            is_active=False,
+            registration_status="completed" if skip_verification else "pending_email",
+            is_active=True if skip_verification else False,
+            is_email_verified=True if skip_verification else False,
+            is_phone_verified=True if skip_verification else False,
+            email_verified_at=datetime.utcnow() if skip_verification else None,
+            phone_verified_at=datetime.utcnow() if skip_verification else None,
             created_at=datetime.utcnow()
         )
 
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+
+        # If verification is skipped, user can login immediately
+        if skip_verification:
+            log_auth_attempt(db, new_user.id, ip_address, "register_step1", True, "User created (dev mode - no verification)")
+            return RegistrationResponse(
+                success=True,
+                message="Registration successful! You can now login.",
+                user_id=new_user.id,
+                next_step="login",
+                data={
+                    "ready_to_login": True,
+                    "email": new_user.email
+                }
+            )
 
         # Send email verification
         try:

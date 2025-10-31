@@ -53,19 +53,28 @@ class EmailService:
                 if not text_content:
                     text_content = self._html_to_text(html_content)
 
-                logger.info(f"""
-=== DEVELOPMENT EMAIL ===
-To: {to_email}
-From: {self.from_email}
-Subject: {subject}
+                # Extract verification code from content if present
+                import re
+                code_match = re.search(r'\b\d{6}\b', text_content)
+                verification_code = code_match.group(0) if code_match else "N/A"
 
-Text Content:
-{text_content}
-
-HTML Content:
-{html_content[:200]}...
-=========================
+                logger.warning(f"""
+╔═══════════════════════════════════════════════════════════════╗
+║              📧 DEVELOPMENT MODE - EMAIL LOG                  ║
+╠═══════════════════════════════════════════════════════════════╣
+║ To: {to_email:<56} ║
+║ Subject: {subject:<53} ║
+║                                                               ║
+║ 🔑 VERIFICATION CODE: {verification_code:<40} ║
+║                                                               ║
+║ Full Content:                                                 ║
+║ {text_content[:100]:<61} ║
+╚═══════════════════════════════════════════════════════════════╝
                 """)
+
+                # Also print to console for visibility
+                print(f"\n⚡ VERIFICATION CODE for {to_email}: {verification_code}\n")
+
                 return True
 
             message = MIMEMultipart("alternative")
