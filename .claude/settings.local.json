@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(docker-compose restart:*)"
+      "Bash(docker-compose restart:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker:*)",
+      "Bash(ls:*)",
+      "Bash(docker-compose:*)",
+      "Bash(find:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nUpdate backend models and API routes for enhanced assessment features\n\n- Update assessment models with complete risk scoring algorithm\n- Add assessment schema definitions\n- Update authentication endpoints\n- Enhance email service configuration\n- Move assessment page to public route\n- Update homepage with improved navigation\n- Add authentication guide documentation\n\n🚀 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(open:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
