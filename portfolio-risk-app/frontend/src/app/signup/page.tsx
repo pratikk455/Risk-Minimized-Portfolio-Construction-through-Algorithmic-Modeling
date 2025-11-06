@@ -118,7 +118,19 @@ export default function SignupPage() {
       if (err.response?.data?.message) {
         setError(err.response.data.message)
       } else if (err.response?.data?.detail) {
-        setError(err.response.data.detail)
+        // Handle both string and object detail (validation errors)
+        const detail = err.response.data.detail
+        if (typeof detail === 'string') {
+          setError(detail)
+        } else if (Array.isArray(detail)) {
+          // FastAPI validation errors are arrays of objects
+          const errorMessages = detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ')
+          setError(errorMessages)
+        } else if (typeof detail === 'object') {
+          setError(JSON.stringify(detail))
+        } else {
+          setError('Registration failed. Please try again.')
+        }
       } else {
         setError('Registration failed. Please try again.')
       }
