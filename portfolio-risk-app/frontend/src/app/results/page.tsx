@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { CheckCircleIcon, ArrowLeftIcon, ChartBarIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
 
 interface AssessmentResults {
   answers: Record<string, number>
@@ -17,6 +21,7 @@ export default function ResultsPage() {
   const router = useRouter()
   const [results, setResults] = useState<AssessmentResults | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [assessmentSaved, setAssessmentSaved] = useState(false)
 
   useEffect(() => {
     const savedResults = localStorage.getItem('assessmentResults')
@@ -25,7 +30,52 @@ export default function ResultsPage() {
       return
     }
     setResults(JSON.parse(savedResults))
+
+    // Save assessment to backend if user is logged in
+    saveAssessmentToBackend(JSON.parse(savedResults))
   }, [router])
+
+  const saveAssessmentToBackend = async (assessmentData: AssessmentResults) => {
+    const accessToken = localStorage.getItem('access_token')
+
+    if (!accessToken) {
+      console.log('User not logged in, skipping backend save')
+      return
+    }
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/assessment/submit`,
+        {
+          // Map answers object to backend format
+          ...assessmentData.answers
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (response.data) {
+        console.log('Assessment saved to backend:', response.data)
+        setAssessmentSaved(true)
+        // Clear the pending assessment flag
+        localStorage.removeItem('pendingAssessment')
+        toast.success('Assessment saved successfully!')
+      }
+    } catch (error: any) {
+      console.error('Failed to save assessment to backend:', error)
+      if (error.response?.status === 401) {
+        // Token expired or invalid
+        toast.error('Session expired. Please login again.')
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        router.push('/login')
+      }
+    }
+  }
 
   const handleGeneratePortfolio = async () => {
     setIsGenerating(true)

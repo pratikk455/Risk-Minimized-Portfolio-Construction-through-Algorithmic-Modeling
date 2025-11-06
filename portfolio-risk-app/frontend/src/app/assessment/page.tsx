@@ -354,12 +354,28 @@ export default function AssessmentPage() {
         completedAt: new Date().toISOString()
       }))
 
+      // Mark that assessment is pending (user needs to login/signup)
+      localStorage.setItem('pendingAssessment', 'true')
+
       toast.success(`Assessment complete! Your risk profile: ${riskProfile}`)
 
-      // Show results
-      setTimeout(() => {
-        router.push('/results')
-      }, 1500)
+      // Check if user is logged in
+      const accessToken = localStorage.getItem('access_token')
+
+      if (accessToken) {
+        // User is logged in, go to results
+        setTimeout(() => {
+          router.push('/results')
+        }, 1500)
+      } else {
+        // User not logged in, redirect to auth page
+        toast.success('Please login or create an account to save your results', {
+          duration: 3000
+        })
+        setTimeout(() => {
+          router.push('/auth-required')
+        }, 2000)
+      }
     } catch (error: any) {
       console.error('Assessment submission error:', error)
       toast.error('Failed to process assessment')
