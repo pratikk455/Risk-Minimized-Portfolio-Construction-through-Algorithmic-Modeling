@@ -565,8 +565,8 @@ async def login(
             )
         else:
             # 2FA not enabled, create tokens
-            access_token = create_access_token(data={"sub": str(user.id)})
-            refresh_token = create_refresh_token(data={"sub": str(user.id)})
+            access_token = create_access_token(subject=str(user.id))
+            refresh_token = create_refresh_token(subject=str(user.id))
 
             db.commit()
             log_auth_attempt(db, user.id, ip_address, "login", True, "Login successful without 2FA")
@@ -634,8 +634,8 @@ async def login_otp(
 
         if success:
             # Create tokens
-            access_token = create_access_token(data={"sub": str(user.id)})
-            refresh_token = create_refresh_token(data={"sub": str(user.id)})
+            access_token = create_access_token(subject=str(user.id))
+            refresh_token = create_refresh_token(subject=str(user.id))
 
             # Update user activity
             user.last_login = datetime.utcnow()
