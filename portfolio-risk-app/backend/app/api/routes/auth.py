@@ -24,11 +24,12 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    username = security.decode_token(token)
-    if username is None:
+    user_id = security.decode_token(token)
+    if user_id is None:
         raise credentials_exception
 
-    user = db.query(User).filter(User.username == username).first()
+    # Token contains user ID, not username
+    user = db.query(User).filter(User.id == int(user_id)).first()
     if user is None:
         raise credentials_exception
 
