@@ -40,23 +40,24 @@ def create_refresh_token(subject: str | Any) -> str:
     return encoded_jwt
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    # Truncate password to 72 bytes for bcrypt compatibility
-    password_bytes = plain_password.encode('utf-8')[:72]
-    password_truncated = password_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.verify(password_truncated, hashed_password)
+    try:
+        # Truncate password to 72 bytes for bcrypt compatibility
+        password_bytes = plain_password.encode('utf-8')[:72]
+        password_truncated = password_bytes.decode('utf-8', errors='ignore')
+        return pwd_context.verify(password_truncated, hashed_password)
+    except Exception as e:
+        logger.error(f"Password verification failed: {e}")
+        return False
 
 def get_password_hash(password: str) -> str:
-    # Simple approach - ensure password is not too long
-    if len(password.encode('utf-8')) > 72:
-        # If password is too long, truncate it
-        password = password[:60]  # Safe truncation
     try:
-        return pwd_context.hash(password)
+        # Truncate password to 72 bytes for bcrypt compatibility
+        password_bytes = password.encode('utf-8')[:72]
+        password_truncated = password_bytes.decode('utf-8', errors='ignore')
+        return pwd_context.hash(password_truncated)
     except Exception as e:
         logger.error(f"Password hashing failed: {e}")
-        # Fallback to a very simple hash for development
-        import hashlib
-        return hashlib.sha256(password.encode()).hexdigest()
+        raise Exception(f"Failed to hash password: {e}")
 
 def decode_token(token: str) -> Optional[str]:
     """Legacy function for backward compatibility"""
