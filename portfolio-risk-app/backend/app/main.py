@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.core.config import settings
-from app.api.routes import auth, assessment, portfolio, users
+from app.api.routes import auth, assessment, portfolio, users, trading
 from app.api.v1.api import api_router as api_v1_router
 from app.core.database import engine, Base
 
@@ -53,3 +53,4 @@ app.include_router(auth.router, prefix="/api/auth", tags=["authentication-legacy
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(assessment.router, prefix="/api/assessment", tags=["assessment"])
 app.include_router(portfolio.router, prefix="/api/portfolio", tags=["portfolio"])
+app.include_router(trading.router, prefix="/api/trading", tags=["trading"])

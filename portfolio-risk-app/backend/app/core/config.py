@@ -82,6 +82,11 @@ class Settings(BaseSettings):
     # Gemini AI API
     GEMINI_API_KEY: str = ""  # Set in environment variable or .env file
 
+    # Alpaca Trading API (Paper Trading)
+    ALPACA_API_KEY: str = ""  # Set in environment variable or .env file
+    ALPACA_SECRET_KEY: str = ""  # Set in environment variable or .env file
+    ALPACA_PAPER_TRADING: bool = True  # Use paper trading by default
+
     # Environment
     ENVIRONMENT: str = "development"
     DEBUG: bool = True

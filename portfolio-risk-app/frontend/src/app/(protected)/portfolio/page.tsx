@@ -23,7 +23,8 @@ import {
   QuestionMarkCircleIcon,
   AcademicCapIcon,
   LightBulbIcon,
-  PlayIcon
+  PlayIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline'
 
 ChartJS.register(
@@ -1052,6 +1053,30 @@ export default function PortfolioPage() {
               <span>Rebalance your portfolio quarterly or when allocations drift significantly</span>
             </li>
           </ul>
+        </motion.div>
+
+        {/* Start Trading CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+          className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 mb-8 text-white"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">Ready to Trade?</h3>
+              <p className="opacity-90">
+                Execute your portfolio with paper trading - $100,000 virtual money, zero risk!
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/trading')}
+              className="px-8 py-4 bg-white text-green-600 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 whitespace-nowrap"
+            >
+              <BanknotesIcon className="h-5 w-5" />
+              Start Paper Trading
+            </button>
+          </div>
         </motion.div>
 
         {/* Action Buttons */}
