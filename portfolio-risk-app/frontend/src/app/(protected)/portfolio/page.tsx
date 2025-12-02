@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Doughnut } from 'react-chartjs-2'
 import { motion } from 'framer-motion'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -14,7 +16,8 @@ import {
 import {
   ChartBarIcon,
   ArrowPathIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 
 ChartJS.register(
@@ -24,80 +27,89 @@ ChartJS.register(
   Title
 )
 
-interface ETFHolding {
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+interface ETFAllocation {
   ticker: string
   name: string
-  assetClass: string
-  percentage: number
-  expectedReturn: number
-  riskLevel: 'Low' | 'Medium' | 'High'
+  category: string
+  weight: number
+  expected_return: number
+  volatility: number
+  risk_level: number
+}
+
+interface PortfolioMetrics {
+  expected_return: number
+  expected_volatility: number
+  sharpe_ratio: number
+  category_breakdown: {
+    bonds: number
+    stocks: number
+    alternatives: number
+  }
 }
 
 interface PortfolioData {
-  holdings: ETFHolding[]
-  metrics: {
-    expectedReturn: number
-    volatility: number
-    sharpeRatio: number
-    maxDrawdown: number
-  }
-  riskProfile: string
-  riskScore: number
-  assetClassBreakdown: {
-    stocks: number
-    bonds: number
-    realEstate: number
-    commodities: number
-  }
-  diversificationScore: number
+  id?: number
+  risk_profile: string
+  risk_score: number
+  allocations: ETFAllocation[]
+  metrics: PortfolioMetrics
+  ai_recommendation?: string
+  created_at?: string
 }
 
 export default function PortfolioPage() {
   const router = useRouter()
   const [hasPortfolio, setHasPortfolio] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [portfolio, setPortfolio] = useState<PortfolioData | null>(null)
 
   useEffect(() => {
     // Check if portfolio has been generated
     const portfolioGenerated = localStorage.getItem('portfolioGenerated')
-    setHasPortfolio(portfolioGenerated === 'true')
+    const portfolioDataStr = localStorage.getItem('portfolioData')
+
+    if (portfolioGenerated === 'true' && portfolioDataStr) {
+      try {
+        const portfolioData = JSON.parse(portfolioDataStr)
+        setPortfolio(portfolioData)
+        setHasPortfolio(true)
+      } catch (e) {
+        console.error('Failed to parse portfolio data:', e)
+        setHasPortfolio(false)
+      }
+    } else {
+      // Try to fetch from API
+      fetchActivePortfolio()
+    }
     setIsLoading(false)
   }, [])
 
-  // Mock portfolio data - in real app, this would come from API
-  const [portfolio] = useState<PortfolioData>({
-    holdings: [
-      { ticker: 'VTI', name: 'Vanguard Total Stock Market ETF', assetClass: 'US Large Cap Stocks', percentage: 15, expectedReturn: 9.2, riskLevel: 'Medium' },
-      { ticker: 'VUG', name: 'Vanguard Growth ETF', assetClass: 'US Large Cap Growth', percentage: 8, expectedReturn: 10.5, riskLevel: 'High' },
-      { ticker: 'VOE', name: 'Vanguard Mid-Cap Value ETF', assetClass: 'US Mid Cap', percentage: 5, expectedReturn: 8.8, riskLevel: 'Medium' },
-      { ticker: 'VBR', name: 'Vanguard Small-Cap Value ETF', assetClass: 'US Small Cap', percentage: 4, expectedReturn: 9.5, riskLevel: 'High' },
-      { ticker: 'VXUS', name: 'Vanguard Total International Stock ETF', assetClass: 'International Developed', percentage: 12, expectedReturn: 8.1, riskLevel: 'Medium' },
-      { ticker: 'VWO', name: 'Vanguard Emerging Markets ETF', assetClass: 'Emerging Markets', percentage: 6, expectedReturn: 9.8, riskLevel: 'High' },
-      { ticker: 'BND', name: 'Vanguard Total Bond Market ETF', assetClass: 'US Bonds', percentage: 20, expectedReturn: 3.8, riskLevel: 'Low' },
-      { ticker: 'BNDX', name: 'Vanguard International Bond ETF', assetClass: 'International Bonds', percentage: 8, expectedReturn: 3.2, riskLevel: 'Low' },
-      { ticker: 'TIP', name: 'iShares TIPS Bond ETF', assetClass: 'Inflation-Protected', percentage: 5, expectedReturn: 3.5, riskLevel: 'Low' },
-      { ticker: 'VNQ', name: 'Vanguard Real Estate ETF', assetClass: 'US REITs', percentage: 7, expectedReturn: 7.5, riskLevel: 'Medium' },
-      { ticker: 'VNQI', name: 'Vanguard Global ex-US Real Estate ETF', assetClass: 'International REITs', percentage: 3, expectedReturn: 6.8, riskLevel: 'Medium' },
-      { ticker: 'GLD', name: 'SPDR Gold Trust', assetClass: 'Commodities - Gold', percentage: 3, expectedReturn: 4.2, riskLevel: 'High' },
-      { ticker: 'DBC', name: 'Invesco DB Commodity Index', assetClass: 'Commodities - Diversified', percentage: 2, expectedReturn: 5.1, riskLevel: 'High' },
-      { ticker: 'SCHD', name: 'Schwab US Dividend Equity ETF', assetClass: 'Dividend Stocks', percentage: 2, expectedReturn: 8.9, riskLevel: 'Low' },
-    ],
-    metrics: {
-      expectedReturn: 7.8,
-      volatility: 11.2,
-      sharpeRatio: 0.62,
-      maxDrawdown: -16.5,
-    },
-    riskProfile: 'Moderate',
-    riskScore: 6,
-    assetClassBreakdown: {
-      stocks: 52,
-      bonds: 33,
-      realEstate: 10,
-      commodities: 5,
-    },
-    diversificationScore: 8.5,
-  })
+  const fetchActivePortfolio = async () => {
+    const accessToken = localStorage.getItem('access_token')
+    if (!accessToken) {
+      return
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}/api/portfolio/active`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+
+      if (response.data) {
+        setPortfolio(response.data)
+        setHasPortfolio(true)
+        localStorage.setItem('portfolioData', JSON.stringify(response.data))
+        localStorage.setItem('portfolioGenerated', 'true')
+      }
+    } catch (error) {
+      console.error('Failed to fetch portfolio:', error)
+    }
+  }
 
   // Color palette for chart
   const colors = [
@@ -117,57 +129,28 @@ export default function PortfolioPage() {
     'rgba(244, 63, 94, 0.8)',    // Red
   ]
 
-  const donutData = {
-    labels: portfolio.holdings.map(h => `${h.ticker} (${h.percentage}%)`),
-    datasets: [
-      {
-        data: portfolio.holdings.map(h => h.percentage),
-        backgroundColor: colors,
-        borderColor: colors.map(c => c.replace('0.8', '1')),
-        borderWidth: 2,
-      },
-    ],
+  const getRiskLevelLabel = (level: number) => {
+    if (level <= 3) return 'Low'
+    if (level <= 6) return 'Medium'
+    return 'High'
   }
 
-  const donutOptions = {
-    cutout: '65%',
-    plugins: {
-      legend: {
-        position: 'right' as const,
-        labels: {
-          boxWidth: 12,
-          padding: 10,
-          font: {
-            size: 11,
-          },
-        },
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: any) {
-            const holding = portfolio.holdings[context.dataIndex]
-            return [
-              `${holding.ticker}: ${holding.percentage}%`,
-              `${holding.name}`,
-              `Asset Class: ${holding.assetClass}`,
-            ]
-          },
-        },
-      },
-    },
-    maintainAspectRatio: false,
+  const getRiskLevelColor = (level: number) => {
+    if (level <= 3) return 'bg-green-100 text-green-700 border-green-300'
+    if (level <= 6) return 'bg-yellow-100 text-yellow-700 border-yellow-300'
+    return 'bg-red-100 text-red-700 border-red-300'
   }
 
-  const getRiskLevelColor = (level: string) => {
-    switch (level) {
-      case 'Low':
-        return 'bg-green-100 text-green-700 border-green-300'
-      case 'Medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-300'
-      case 'High':
-        return 'bg-red-100 text-red-700 border-red-300'
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'bonds':
+        return 'bg-blue-100 text-blue-700'
+      case 'stocks':
+        return 'bg-green-100 text-green-700'
+      case 'alternatives':
+        return 'bg-purple-100 text-purple-700'
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-300'
+        return 'bg-gray-100 text-gray-700'
     }
   }
 
@@ -182,7 +165,7 @@ export default function PortfolioPage() {
     )
   }
 
-  if (!hasPortfolio) {
+  if (!hasPortfolio || !portfolio) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <motion.div
@@ -217,6 +200,47 @@ export default function PortfolioPage() {
     )
   }
 
+  const donutData = {
+    labels: portfolio.allocations.map(h => `${h.ticker} (${h.weight.toFixed(1)}%)`),
+    datasets: [
+      {
+        data: portfolio.allocations.map(h => h.weight),
+        backgroundColor: colors.slice(0, portfolio.allocations.length),
+        borderColor: colors.slice(0, portfolio.allocations.length).map(c => c.replace('0.8', '1')),
+        borderWidth: 2,
+      },
+    ],
+  }
+
+  const donutOptions = {
+    cutout: '65%',
+    plugins: {
+      legend: {
+        position: 'right' as const,
+        labels: {
+          boxWidth: 12,
+          padding: 10,
+          font: {
+            size: 11,
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            const holding = portfolio.allocations[context.dataIndex]
+            return [
+              `${holding.ticker}: ${holding.weight.toFixed(1)}%`,
+              `${holding.name}`,
+              `Category: ${holding.category}`,
+            ]
+          },
+        },
+      },
+    },
+    maintainAspectRatio: false,
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
       <div className="max-w-7xl mx-auto px-4 py-12">
@@ -227,7 +251,7 @@ export default function PortfolioPage() {
           className="mb-8"
         >
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Optimized Portfolio</h1>
-          <p className="text-gray-600">Personalized allocation based on your risk profile and investment goals</p>
+          <p className="text-gray-600">Personalized allocation based on your risk profile and Sharpe ratio optimization</p>
         </motion.div>
 
         {/* Hero Card */}
@@ -239,20 +263,38 @@ export default function PortfolioPage() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Risk Profile: {portfolio.riskProfile}</h2>
-              <p className="text-lg opacity-90">Risk Score: {portfolio.riskScore}/10</p>
-              <p className="opacity-80 mt-2">Your portfolio is optimized for balanced growth with controlled risk</p>
+              <h2 className="text-3xl font-bold mb-2">Risk Profile: {portfolio.risk_profile}</h2>
+              <p className="text-lg opacity-90">Risk Score: {portfolio.risk_score}/10</p>
+              <p className="opacity-80 mt-2">Optimized for risk-adjusted returns using Sharpe ratio</p>
             </div>
             <div className="text-center md:text-right">
-              <div className="text-5xl font-bold mb-2">{portfolio.metrics.expectedReturn}%</div>
+              <div className="text-5xl font-bold mb-2">{portfolio.metrics.expected_return.toFixed(1)}%</div>
               <div className="text-lg opacity-90">Expected Annual Return</div>
               <div className="mt-3 px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm">
                 <div className="text-sm opacity-80">Total Holdings</div>
-                <div className="text-2xl font-bold">{portfolio.holdings.length} ETFs</div>
+                <div className="text-2xl font-bold">{portfolio.allocations.length} ETFs</div>
               </div>
             </div>
           </div>
         </motion.div>
+
+        {/* AI Recommendation */}
+        {portfolio.ai_recommendation && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-6 mb-8"
+          >
+            <div className="flex items-start gap-3">
+              <SparklesIcon className="h-6 w-6 text-purple-600 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="text-lg font-bold text-purple-900 mb-2">AI Portfolio Insights</h3>
+                <p className="text-purple-800 whitespace-pre-line">{portfolio.ai_recommendation}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Chart and Asset Class Breakdown */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
@@ -283,13 +325,13 @@ export default function PortfolioPage() {
             <div className="space-y-6">
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-700">Stocks</span>
-                  <span className="font-bold text-blue-600">{portfolio.assetClassBreakdown.stocks}%</span>
+                  <span className="font-medium text-gray-700">Bonds</span>
+                  <span className="font-bold text-blue-600">{portfolio.metrics.category_breakdown?.bonds?.toFixed(1) || 0}%</span>
                 </div>
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${portfolio.assetClassBreakdown.stocks}%` }}
+                    animate={{ width: `${portfolio.metrics.category_breakdown?.bonds || 0}%` }}
                     transition={{ delay: 0.5, duration: 1 }}
                     className="h-full bg-gradient-to-r from-blue-500 to-blue-600"
                   />
@@ -298,13 +340,13 @@ export default function PortfolioPage() {
 
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-700">Bonds</span>
-                  <span className="font-bold text-green-600">{portfolio.assetClassBreakdown.bonds}%</span>
+                  <span className="font-medium text-gray-700">Stocks</span>
+                  <span className="font-bold text-green-600">{portfolio.metrics.category_breakdown?.stocks?.toFixed(1) || 0}%</span>
                 </div>
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${portfolio.assetClassBreakdown.bonds}%` }}
+                    animate={{ width: `${portfolio.metrics.category_breakdown?.stocks || 0}%` }}
                     transition={{ delay: 0.6, duration: 1 }}
                     className="h-full bg-gradient-to-r from-green-500 to-green-600"
                   />
@@ -313,40 +355,25 @@ export default function PortfolioPage() {
 
               <div>
                 <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-700">Real Estate</span>
-                  <span className="font-bold text-orange-600">{portfolio.assetClassBreakdown.realEstate}%</span>
+                  <span className="font-medium text-gray-700">Alternatives</span>
+                  <span className="font-bold text-purple-600">{portfolio.metrics.category_breakdown?.alternatives?.toFixed(1) || 0}%</span>
                 </div>
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${portfolio.assetClassBreakdown.realEstate}%` }}
+                    animate={{ width: `${portfolio.metrics.category_breakdown?.alternatives || 0}%` }}
                     transition={{ delay: 0.7, duration: 1 }}
-                    className="h-full bg-gradient-to-r from-orange-500 to-orange-600"
+                    className="h-full bg-gradient-to-r from-purple-500 to-purple-600"
                   />
                 </div>
               </div>
 
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-700">Commodities</span>
-                  <span className="font-bold text-yellow-600">{portfolio.assetClassBreakdown.commodities}%</span>
-                </div>
-                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${portfolio.assetClassBreakdown.commodities}%` }}
-                    transition={{ delay: 0.8, duration: 1 }}
-                    className="h-full bg-gradient-to-r from-yellow-500 to-yellow-600"
-                  />
-                </div>
-              </div>
-
-              {/* Diversification Score */}
+              {/* Sharpe Ratio Score */}
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <div className="text-center">
-                  <div className="text-sm text-gray-600 mb-2">Diversification Score</div>
-                  <div className="text-4xl font-bold text-primary-600">{portfolio.diversificationScore}/10</div>
-                  <p className="text-sm text-gray-500 mt-2">Excellent portfolio diversification</p>
+                  <div className="text-sm text-gray-600 mb-2">Sharpe Ratio</div>
+                  <div className="text-4xl font-bold text-primary-600">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
+                  <p className="text-sm text-gray-500 mt-2">Risk-adjusted return metric</p>
                 </div>
               </div>
             </div>
@@ -365,7 +392,7 @@ export default function PortfolioPage() {
               <div className="text-sm text-gray-600">Expected Return</div>
               <InformationCircleIcon className="h-5 w-5 text-gray-400" />
             </div>
-            <div className="text-3xl font-bold text-green-600">{portfolio.metrics.expectedReturn}%</div>
+            <div className="text-3xl font-bold text-green-600">{portfolio.metrics.expected_return.toFixed(1)}%</div>
             <div className="text-xs text-gray-500 mt-1">Annualized</div>
           </div>
 
@@ -374,7 +401,7 @@ export default function PortfolioPage() {
               <div className="text-sm text-gray-600">Volatility (Risk)</div>
               <InformationCircleIcon className="h-5 w-5 text-gray-400" />
             </div>
-            <div className="text-3xl font-bold text-yellow-600">{portfolio.metrics.volatility}%</div>
+            <div className="text-3xl font-bold text-yellow-600">{portfolio.metrics.expected_volatility.toFixed(1)}%</div>
             <div className="text-xs text-gray-500 mt-1">Standard Deviation</div>
           </div>
 
@@ -383,17 +410,17 @@ export default function PortfolioPage() {
               <div className="text-sm text-gray-600">Sharpe Ratio</div>
               <InformationCircleIcon className="h-5 w-5 text-gray-400" />
             </div>
-            <div className="text-3xl font-bold text-blue-600">{portfolio.metrics.sharpeRatio}</div>
+            <div className="text-3xl font-bold text-blue-600">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
             <div className="text-xs text-gray-500 mt-1">Risk-Adjusted Return</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-red-500">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-purple-500">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-600">Max Drawdown</div>
+              <div className="text-sm text-gray-600">Risk Profile</div>
               <InformationCircleIcon className="h-5 w-5 text-gray-400" />
             </div>
-            <div className="text-3xl font-bold text-red-600">{portfolio.metrics.maxDrawdown}%</div>
-            <div className="text-xs text-gray-500 mt-1">Worst-Case Scenario</div>
+            <div className="text-3xl font-bold text-purple-600">{portfolio.risk_score.toFixed(1)}/10</div>
+            <div className="text-xs text-gray-500 mt-1">{portfolio.risk_profile}</div>
           </div>
         </motion.div>
 
@@ -411,14 +438,15 @@ export default function PortfolioPage() {
                 <tr className="border-b-2 border-gray-200">
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">Ticker</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">ETF Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Asset Class</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Category</th>
                   <th className="text-right py-3 px-4 font-semibold text-gray-700">Allocation</th>
                   <th className="text-right py-3 px-4 font-semibold text-gray-700">Expected Return</th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Volatility</th>
                   <th className="text-center py-3 px-4 font-semibold text-gray-700">Risk</th>
                 </tr>
               </thead>
               <tbody>
-                {portfolio.holdings.map((holding, index) => (
+                {portfolio.allocations.map((holding, index) => (
                   <motion.tr
                     key={holding.ticker}
                     initial={{ opacity: 0, x: -20 }}
@@ -436,12 +464,17 @@ export default function PortfolioPage() {
                       </div>
                     </td>
                     <td className="py-4 px-4 text-gray-700">{holding.name}</td>
-                    <td className="py-4 px-4 text-sm text-gray-600">{holding.assetClass}</td>
-                    <td className="py-4 px-4 text-right font-bold text-gray-900">{holding.percentage}%</td>
-                    <td className="py-4 px-4 text-right text-green-600 font-semibold">{holding.expectedReturn}%</td>
+                    <td className="py-4 px-4">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${getCategoryColor(holding.category)}`}>
+                        {holding.category}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-right font-bold text-gray-900">{holding.weight.toFixed(1)}%</td>
+                    <td className="py-4 px-4 text-right text-green-600 font-semibold">{holding.expected_return.toFixed(1)}%</td>
+                    <td className="py-4 px-4 text-right text-yellow-600 font-semibold">{holding.volatility.toFixed(1)}%</td>
                     <td className="py-4 px-4 text-center">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getRiskLevelColor(holding.riskLevel)}`}>
-                        {holding.riskLevel}
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getRiskLevelColor(holding.risk_level)}`}>
+                        {getRiskLevelLabel(holding.risk_level)}
                       </span>
                     </td>
                   </motion.tr>
@@ -464,24 +497,24 @@ export default function PortfolioPage() {
           </h3>
           <ul className="space-y-3 text-blue-800">
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Review your portfolio allocation and individual ETF recommendations above</span>
+              <span className="text-blue-600 font-bold">1.</span>
+              <span>Review your personalized ETF allocation based on your risk profile</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
+              <span className="text-blue-600 font-bold">2.</span>
               <span>Research each ETF to understand its investment strategy and holdings</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Consider consulting with a financial advisor before making investment decisions</span>
+              <span className="text-blue-600 font-bold">3.</span>
+              <span>Open a brokerage account (e.g., Fidelity, Schwab, Vanguard) if you don't have one</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Monitor your portfolio performance and rebalance quarterly or as needed</span>
+              <span className="text-blue-600 font-bold">4.</span>
+              <span>Purchase ETFs according to the recommended allocation percentages</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">•</span>
-              <span>Reassess your risk profile annually or after major life changes</span>
+              <span className="text-blue-600 font-bold">5.</span>
+              <span>Rebalance your portfolio quarterly or when allocations drift significantly</span>
             </li>
           </ul>
         </motion.div>
@@ -496,6 +529,7 @@ export default function PortfolioPage() {
           <button
             onClick={() => {
               localStorage.removeItem('portfolioGenerated')
+              localStorage.removeItem('portfolioData')
               router.push('/assessment')
             }}
             className="px-8 py-4 bg-white border-2 border-primary-600 text-primary-600 rounded-xl font-semibold hover:bg-primary-50 transition-all flex items-center justify-center gap-2"

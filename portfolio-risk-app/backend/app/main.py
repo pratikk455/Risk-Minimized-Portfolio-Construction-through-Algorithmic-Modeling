@@ -19,8 +19,8 @@ async def lifespan(app: FastAPI):
     logger.info("Application shutdown")
 
 app = FastAPI(
-    title="Portfolio Risk Management API",
-    description="API for risk assessment and portfolio construction",
+    title="Hedgewise API",
+    description="API for smart portfolio management and risk assessment",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -36,7 +36,7 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {
-        "message": "Portfolio Risk Management API",
+        "message": "Hedgewise API",
         "version": "1.0.0",
         "status": "healthy"
     }

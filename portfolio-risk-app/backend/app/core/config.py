@@ -4,7 +4,7 @@ import secrets
 import json
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Portfolio Risk Management"
+    PROJECT_NAME: str = "Hedgewise"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Database
-    DATABASE_URL: str = "postgresql://portfolio_user:portfolio_pass@localhost:5432/portfolio_db"
+    DATABASE_URL: str = "sqlite:///./portfolio_risk.db"
 
     # Cache
     REDIS_URL: str = "redis://localhost:6379"
@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_REGISTRATION_PER_DAY: int = 5
 
     # 2FA Settings
-    TOTP_ISSUER_NAME: str = "PortfolioRisk"
+    TOTP_ISSUER_NAME: str = "Hedgewise"
     BACKUP_CODES_COUNT: int = 10
     TOTP_WINDOW: int = 1  # Allow 1 time step tolerance
 
@@ -78,6 +78,9 @@ class Settings(BaseSettings):
     REQUIRE_EMAIL_VERIFICATION: bool = False
     REQUIRE_PHONE_VERIFICATION: bool = False
     REQUIRE_2FA_SETUP: bool = False
+
+    # Gemini AI API
+    GEMINI_API_KEY: str = ""  # Set in environment variable or .env file
 
     # Environment
     ENVIRONMENT: str = "development"

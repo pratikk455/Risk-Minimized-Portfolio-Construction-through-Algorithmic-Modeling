@@ -102,7 +102,7 @@ export default function HomePage() {
           whileHover={{ scale: 1.05 }}
           className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent"
         >
-          PortfolioRisk
+          Hedgewise
         </motion.div>
         <div className="flex gap-4">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -428,13 +428,13 @@ export default function HomePage() {
             viewport={{ once: true }}
           >
             <div className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent mb-4">
-              PortfolioRisk
+              Hedgewise
             </div>
             <p className="text-neutral-400 mb-6">
               Democratizing institutional-grade portfolio management for everyone.
             </p>
             <p className="text-neutral-500 text-sm">
-              © 2024 PortfolioRisk. Built with ❤️ for better investing.
+              © 2024 Hedgewise. Built with ❤️ for better investing.
             </p>
           </motion.div>
         </div>

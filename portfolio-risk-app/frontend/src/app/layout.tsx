@@ -24,7 +24,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Portfolio Risk Management',
+  title: 'Hedgewise - Smart Portfolio Management',
   description: 'Advanced portfolio construction with risk minimization',
 }
 

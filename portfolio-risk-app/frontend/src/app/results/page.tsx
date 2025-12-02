@@ -8,7 +8,7 @@ import { CheckCircleIcon, ArrowLeftIcon, ChartBarIcon, SparklesIcon } from '@her
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 interface AssessmentResults {
   answers: Record<string, number>
@@ -80,14 +80,53 @@ export default function ResultsPage() {
   const handleGeneratePortfolio = async () => {
     setIsGenerating(true)
 
-    // Simulate portfolio generation with a 2.5 second delay
-    await new Promise(resolve => setTimeout(resolve, 2500))
+    const accessToken = localStorage.getItem('access_token')
 
-    // Mark portfolio as generated in localStorage
-    localStorage.setItem('portfolioGenerated', 'true')
+    if (!accessToken) {
+      toast.error('Please login to generate your portfolio')
+      setIsGenerating(false)
+      router.push('/login')
+      return
+    }
 
-    // Redirect to portfolio page
-    router.push('/portfolio')
+    try {
+      // Call the backend portfolio generate API
+      const response = await axios.post(
+        `${API_URL}/api/portfolio/generate`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (response.data) {
+        // Store the portfolio data in localStorage
+        localStorage.setItem('portfolioData', JSON.stringify(response.data))
+        localStorage.setItem('portfolioGenerated', 'true')
+
+        toast.success('Portfolio generated successfully!')
+
+        // Redirect to portfolio page
+        router.push('/portfolio')
+      }
+    } catch (error: any) {
+      console.error('Failed to generate portfolio:', error)
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.')
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        router.push('/login')
+      } else if (error.response?.status === 404) {
+        toast.error('Please complete the assessment first')
+      } else {
+        toast.error('Failed to generate portfolio. Please try again.')
+      }
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   if (!results) {
@@ -123,32 +162,32 @@ export default function ResultsPage() {
       case 'Very Conservative':
         return {
           title: 'Capital Preservation Focus',
-          description: 'Your profile suggests a strong preference for protecting capital over growth. Consider bond-heavy portfolios with minimal equity exposure.',
-          allocation: 'Recommended: 80% Bonds, 15% Stocks, 5% Cash'
+          description: 'Your profile suggests a strong preference for protecting capital over growth. Your portfolio will emphasize bonds and low-volatility ETFs.',
+          allocation: 'Focus: Bonds 55%+, Low-Risk Stocks, Minimal Alternatives'
         }
       case 'Conservative':
         return {
           title: 'Income & Stability',
-          description: 'You prefer steady, predictable returns with limited downside risk. A balanced portfolio with emphasis on income-generating assets suits you.',
-          allocation: 'Recommended: 60% Bonds, 30% Stocks, 10% Cash'
+          description: 'You prefer steady, predictable returns with limited downside risk. Your portfolio will balance bonds with dividend-paying stocks.',
+          allocation: 'Focus: Bonds 40%+, Dividend Stocks, Safe Alternatives'
         }
       case 'Moderate':
         return {
           title: 'Balanced Growth',
-          description: 'You seek a balance between growth and risk management. A diversified portfolio across multiple asset classes is ideal.',
-          allocation: 'Recommended: 40% Bonds, 50% Stocks, 10% Alternatives'
+          description: 'You seek a balance between growth and risk management. Your portfolio will be diversified across asset classes.',
+          allocation: 'Focus: Balanced Bonds/Stocks, Moderate Alternatives'
         }
       case 'Aggressive':
         return {
           title: 'Growth Oriented',
-          description: 'You are comfortable with volatility in pursuit of higher returns. Equity-focused portfolios with strategic alternatives fit your profile.',
-          allocation: 'Recommended: 20% Bonds, 65% Stocks, 15% Alternatives'
+          description: 'You are comfortable with volatility in pursuit of higher returns. Your portfolio will emphasize growth stocks.',
+          allocation: 'Focus: Growth Stocks 70%+, Strategic Alternatives'
         }
       case 'Very Aggressive':
         return {
           title: 'Maximum Growth Potential',
-          description: 'You prioritize high returns and can handle significant volatility. Consider concentrated equity positions and alternative investments.',
-          allocation: 'Recommended: 10% Bonds, 70% Stocks, 20% Alternatives'
+          description: 'You prioritize high returns and can handle significant volatility. Your portfolio may include crypto and high-growth sectors.',
+          allocation: 'Focus: Growth Stocks 85%+, Crypto & Innovation ETFs'
         }
       default:
         return {
@@ -269,8 +308,8 @@ export default function ResultsPage() {
               <div className="text-sm text-gray-600">Overall Score</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-xl">
-              <div className="text-2xl font-bold text-primary-600">100%</div>
-              <div className="text-sm text-gray-600">Completion Rate</div>
+              <div className="text-2xl font-bold text-primary-600">20</div>
+              <div className="text-sm text-gray-600">ETFs Available</div>
             </div>
           </div>
 

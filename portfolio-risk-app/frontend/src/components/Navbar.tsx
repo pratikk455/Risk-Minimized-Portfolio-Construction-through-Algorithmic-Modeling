@@ -39,9 +39,9 @@ export default function Navbar() {
           {/* Logo/Brand */}
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">PR</span>
+              <span className="text-white font-bold text-sm">H</span>
             </div>
-            <span className="font-bold text-lg text-gray-900">Portfolio Risk</span>
+            <span className="font-bold text-lg text-gray-900">Hedgewise</span>
           </Link>
 
           {/* Nav Links */}
