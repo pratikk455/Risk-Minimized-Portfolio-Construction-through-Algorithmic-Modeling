@@ -1066,7 +1066,7 @@ export default function PortfolioPage() {
             <div>
               <h3 className="text-2xl font-bold mb-2">Ready to Trade?</h3>
               <p className="opacity-90">
-                Execute your portfolio with paper trading - $100,000 virtual money, zero risk!
+                Execute your portfolio with paper trading - $10,000 virtual money, zero risk!
               </p>
             </div>
             <button

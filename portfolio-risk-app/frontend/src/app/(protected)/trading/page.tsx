@@ -80,6 +80,14 @@ export default function TradingPage() {
   const [isExecuting, setIsExecuting] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'execute' | 'positions' | 'orders'>('execute')
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+
+  // Limit paper trading to $10,000
+  const MAX_INVESTMENT = 10000
+
+  // Calculate available cash based on simulated $10k budget
+  const investedAmount = positions.reduce((sum, pos) => sum + pos.cost_basis, 0)
+  const availableCash = Math.max(0, MAX_INVESTMENT - investedAmount)
 
   const fetchTradingStatus = useCallback(async () => {
     const accessToken = localStorage.getItem('access_token')
@@ -93,6 +101,7 @@ export default function TradingPage() {
         headers: { 'Authorization': `Bearer ${accessToken}` }
       })
       setTradingStatus(response.data)
+      setLastUpdated(new Date())
     } catch (error: any) {
       console.error('Error fetching trading status:', error)
       if (error.response?.status === 401) {
@@ -159,6 +168,18 @@ export default function TradingPage() {
       fetchOrders()
     }
   }, [tradingStatus, fetchPositions, fetchOrders])
+
+  // Auto-refresh for live data every 10 seconds
+  useEffect(() => {
+    if (!tradingStatus?.configured) return
+
+    const interval = setInterval(() => {
+      fetchTradingStatus()
+      fetchPositions()
+    }, 10000) // Refresh every 10 seconds
+
+    return () => clearInterval(interval)
+  }, [tradingStatus?.configured, fetchTradingStatus, fetchPositions])
 
   const handleExecutePortfolio = async () => {
     setShowConfirmModal(false)
@@ -253,7 +274,7 @@ export default function TradingPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Setup Required</h1>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
               To start paper trading, you need to configure your Alpaca API keys.
-              Alpaca offers free paper trading with $100,000 virtual money!
+              Start with a $10,000 virtual budget to practice trading!
             </p>
 
             <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-8 text-left max-w-lg mx-auto">
@@ -321,62 +342,107 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold text-gray-900">Paper Trading</h1>
-            <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-semibold">
-              Simulated
-            </span>
-          </div>
-          <p className="text-gray-600">Execute your portfolio with virtual money - no real risk!</p>
-        </motion.div>
-
-        {/* Account Summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-        >
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-500">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Portfolio Value</span>
-              <BanknotesIcon className="h-5 w-5 text-green-500" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-bold text-gray-900">Paper Trading</h1>
+                <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-semibold">
+                  Simulated
+                </span>
+              </div>
+              <p className="text-gray-600">Execute your portfolio with virtual money - no real risk!</p>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
-              ${(tradingStatus.portfolio_value || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-500">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Buying Power</span>
-              <CurrencyDollarIcon className="h-5 w-5 text-blue-500" />
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              ${(tradingStatus.buying_power || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-purple-500">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Cash</span>
-              <BanknotesIcon className="h-5 w-5 text-purple-500" />
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              ${(tradingStatus.cash || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-amber-500">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Positions</span>
-              <ChartBarIcon className="h-5 w-5 text-amber-500" />
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              {positions.length}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span>LIVE</span>
+                <span className="text-gray-400">|</span>
+                <span>Updated {lastUpdated.toLocaleTimeString()}</span>
+              </div>
+              <button
+                onClick={() => { fetchTradingStatus(); fetchPositions(); }}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Refresh data"
+              >
+                <ArrowPathIcon className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </motion.div>
+
+        {/* Account Summary - Simulated $10k Budget */}
+        {(() => {
+          // Portfolio value is the current market value of positions
+          const portfolioValue = positions.reduce((sum, pos) => sum + pos.market_value, 0)
+          // Total P/L
+          const totalPL = portfolioValue - investedAmount
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+            >
+              <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">Portfolio Value</span>
+                  <BanknotesIcon className="h-5 w-5 text-green-500" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                {totalPL !== 0 && (
+                  <div className={`text-sm mt-1 ${totalPL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {totalPL >= 0 ? '+' : ''}${totalPL.toFixed(2)} ({investedAmount > 0 ? ((totalPL / investedAmount) * 100).toFixed(2) : 0}%)
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">Available Cash</span>
+                  <CurrencyDollarIcon className="h-5 w-5 text-blue-500" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  ${availableCash.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">
+                  of ${MAX_INVESTMENT.toLocaleString()} budget
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-purple-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">Invested</span>
+                  <BanknotesIcon className="h-5 w-5 text-purple-500" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  ${investedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">
+                  {((investedAmount / MAX_INVESTMENT) * 100).toFixed(0)}% of budget used
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-amber-500">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">Positions</span>
+                  <ChartBarIcon className="h-5 w-5 text-amber-500" />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {positions.length}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">
+                  {positions.length > 0 ? 'Active holdings' : 'No holdings'}
+                </div>
+              </div>
+            </motion.div>
+          )
+        })()}
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
@@ -423,18 +489,18 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                     value={investmentAmount}
                     onChange={(e) => setInvestmentAmount(e.target.value)}
                     min="1"
-                    max={tradingStatus.buying_power || 100000}
+                    max={availableCash}
                     className="w-full px-4 py-3 text-2xl font-bold border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:ring-0 transition-colors"
                     placeholder="1000"
                   />
                   <p className="text-sm text-gray-500 mt-2">
-                    Available: ${(tradingStatus.buying_power || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    Available: ${availableCash.toLocaleString('en-US', { minimumFractionDigits: 2 })} of ${MAX_INVESTMENT.toLocaleString()} budget
                   </p>
                 </div>
 
                 {/* Quick Amount Buttons */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {[1000, 5000, 10000, 25000, 50000].map((amount) => (
+                  {[1000, 2500, 5000, 7500, 10000].filter(amount => amount <= availableCash).map((amount) => (
                     <button
                       key={amount}
                       onClick={() => setInvestmentAmount(amount.toString())}
@@ -443,13 +509,21 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                       ${amount.toLocaleString()}
                     </button>
                   ))}
+                  {availableCash > 0 && availableCash < 1000 && (
+                    <button
+                      onClick={() => setInvestmentAmount(availableCash.toFixed(2))}
+                      className="px-4 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      All (${availableCash.toFixed(2)})
+                    </button>
+                  )}
                 </div>
 
                 <button
                   onClick={() => setShowConfirmModal(true)}
-                  disabled={isExecuting || !parseFloat(investmentAmount) || parseFloat(investmentAmount) > (tradingStatus.buying_power || 0)}
+                  disabled={isExecuting || !parseFloat(investmentAmount) || parseFloat(investmentAmount) > availableCash || availableCash <= 0}
                   className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
-                    isExecuting || !parseFloat(investmentAmount) || parseFloat(investmentAmount) > (tradingStatus.buying_power || 0)
+                    isExecuting || !parseFloat(investmentAmount) || parseFloat(investmentAmount) > availableCash || availableCash <= 0
                       ? 'bg-gray-300 cursor-not-allowed'
                       : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-lg'
                   }`}

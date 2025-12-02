@@ -54,8 +54,8 @@ export default function LoginPage() {
           // User just completed assessment, redirect to results
           router.push('/results')
         } else {
-          // Regular login, go to home or portfolio
-          router.push('/')
+          // Regular login, go to portfolio
+          router.push('/portfolio')
         }
       } else if (response.data.requires_2fa) {
         // Handle 2FA (for future implementation)
