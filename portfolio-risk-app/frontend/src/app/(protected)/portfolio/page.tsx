@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Doughnut } from 'react-chartjs-2'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import introJs from 'intro.js'
+import 'intro.js/introjs.css'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -17,7 +19,11 @@ import {
   ChartBarIcon,
   ArrowPathIcon,
   InformationCircleIcon,
-  SparklesIcon
+  SparklesIcon,
+  QuestionMarkCircleIcon,
+  AcademicCapIcon,
+  LightBulbIcon,
+  PlayIcon
 } from '@heroicons/react/24/outline'
 
 ChartJS.register(
@@ -60,11 +66,240 @@ interface PortfolioData {
   created_at?: string
 }
 
+// Educational content for tooltips
+const educationalContent: Record<string, { title: string; simple: string; example: string; emoji: string }> = {
+  expectedReturn: {
+    title: "Expected Return",
+    simple: "This is how much money your investment might grow in a year. Think of it like interest on a savings account, but potentially higher (and riskier)!",
+    example: "If you invest $1,000 and the expected return is 8%, you might have $1,080 after one year.",
+    emoji: "📈"
+  },
+  volatility: {
+    title: "Volatility (Risk)",
+    simple: "This shows how much your investment value might bounce up and down. Higher volatility = more of a rollercoaster ride for your money!",
+    example: "A volatility of 15% means your investment could swing up or down by about 15% in a typical year.",
+    emoji: "🎢"
+  },
+  sharpeRatio: {
+    title: "Sharpe Ratio",
+    simple: "This is like a 'bang for your buck' score. It tells you how much return you're getting for the risk you're taking. Higher is better!",
+    example: "A Sharpe ratio of 1.5 is good - you're getting nice returns without crazy risk. Below 1 means you might want more reward for the risk.",
+    emoji: "⚖️"
+  },
+  riskProfile: {
+    title: "Risk Profile",
+    simple: "This is your personal comfort level with investment ups and downs. It's based on your answers in the assessment.",
+    example: "Conservative = prefer stability. Aggressive = okay with big swings for potentially bigger gains.",
+    emoji: "🎯"
+  },
+  etf: {
+    title: "ETF (Exchange-Traded Fund)",
+    simple: "An ETF is like a basket of investments you can buy with one purchase. Instead of buying one company's stock, you buy a little piece of many!",
+    example: "VOO holds 500 of the biggest US companies. One share = tiny ownership in Apple, Google, Amazon, and 497 more!",
+    emoji: "🧺"
+  },
+  bonds: {
+    title: "Bonds",
+    simple: "Bonds are like IOUs from companies or governments. You lend them money, they pay you back with interest. Usually safer but lower returns than stocks.",
+    example: "Government bonds are super safe - the US government has never failed to pay back. Corporate bonds pay more but are slightly riskier.",
+    emoji: "🏦"
+  },
+  stocks: {
+    title: "Stocks",
+    simple: "When you buy a stock, you own a tiny piece of that company! If the company does well, your stock becomes more valuable.",
+    example: "If you own Apple stock and they sell tons of iPhones, your investment grows. But if sales drop, so might your investment.",
+    emoji: "📊"
+  },
+  alternatives: {
+    title: "Alternative Investments",
+    simple: "These are investments outside of regular stocks and bonds - like gold, real estate, or even cryptocurrency. They can help diversify your portfolio.",
+    example: "Gold often goes up when stocks go down, so having some can protect your portfolio during market crashes.",
+    emoji: "💎"
+  },
+  allocation: {
+    title: "Allocation",
+    simple: "This is what percentage of your money goes into each investment. It's like dividing a pizza - how big is each slice?",
+    example: "If VOO has 25% allocation and you invest $1,000 total, you'd put $250 into VOO.",
+    emoji: "🍕"
+  },
+  diversification: {
+    title: "Diversification",
+    simple: "Don't put all your eggs in one basket! By spreading money across different investments, if one fails, others might save you.",
+    example: "If you only owned airline stocks in 2020... ouch. But if you also had tech stocks, they balanced out the losses!",
+    emoji: "🥚"
+  },
+  riskLevel: {
+    title: "Risk Level",
+    simple: "Each investment has a risk rating from 1-10. Lower numbers = steadier but smaller gains. Higher numbers = potential for bigger gains but also bigger losses.",
+    example: "A bond fund might be risk level 2 (steady). A crypto ETF might be risk level 9 (wild ride!).",
+    emoji: "🌡️"
+  }
+}
+
+// Tooltip component with hover explanation
+const EducationalTooltip = ({
+  content,
+  children
+}: {
+  content: keyof typeof educationalContent
+  children: React.ReactNode
+}) => {
+  const [isVisible, setIsVisible] = useState(false)
+  const info = educationalContent[content]
+
+  return (
+    <div className="relative inline-block">
+      <div
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+        className="cursor-help"
+      >
+        {children}
+      </div>
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-80 pointer-events-none"
+          >
+            <div className="bg-gray-900 text-white rounded-xl p-4 shadow-2xl">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">{info.emoji}</span>
+                <h4 className="font-bold text-lg">{info.title}</h4>
+              </div>
+              <p className="text-gray-200 text-sm mb-3">{info.simple}</p>
+              <div className="bg-gray-800 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <LightBulbIcon className="h-4 w-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-gray-300 text-xs">{info.example}</p>
+                </div>
+              </div>
+              {/* Arrow */}
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export default function PortfolioPage() {
   const router = useRouter()
   const [hasPortfolio, setHasPortfolio] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null)
+  const [showTour, setShowTour] = useState(false)
+
+  // Start the intro.js tour
+  const startTour = useCallback(() => {
+    const intro = introJs()
+
+    intro.setOptions({
+      steps: [
+        {
+          title: '👋 Welcome to Your Portfolio!',
+          intro: "Let's take a quick tour to understand your personalized investment portfolio. Don't worry - we'll explain everything in simple terms!"
+        },
+        {
+          element: '#risk-profile-card',
+          title: '🎯 Your Risk Profile',
+          intro: "This is YOUR personal investment style based on your quiz answers. It determines how we balance safety vs. growth potential in your portfolio.",
+          position: 'bottom'
+        },
+        {
+          element: '#expected-return-display',
+          title: '📈 Expected Annual Return',
+          intro: "This percentage shows how much your investment might grow in a year. Remember: it's an estimate, not a guarantee! Think of it as an educated guess based on historical data.",
+          position: 'left'
+        },
+        {
+          element: '#ai-recommendation',
+          title: '🤖 AI Insights',
+          intro: "Our AI assistant (powered by Google's Gemini) analyzes your profile and gives you personalized tips. It's like having a friendly financial advisor!",
+          position: 'bottom'
+        },
+        {
+          element: '#portfolio-chart',
+          title: '🍕 Portfolio Pie Chart',
+          intro: "This shows how your money is divided among different investments. Each slice is an ETF - a basket of stocks or bonds you can buy as one package. Bigger slice = more of your money goes there!",
+          position: 'right'
+        },
+        {
+          element: '#asset-breakdown',
+          title: '📊 Asset Class Breakdown',
+          intro: "Your investments are split into 3 main types:\n\n🏦 Bonds: Safer, steady returns (like lending money to the government)\n\n📈 Stocks: Higher potential returns but more ups and downs\n\n💎 Alternatives: Things like gold or real estate for extra diversification",
+          position: 'left'
+        },
+        {
+          element: '#sharpe-ratio-display',
+          title: '⚖️ The Sharpe Ratio',
+          intro: "This is the 'bang for your buck' score! It measures how much return you get for the risk you take.\n\n• Above 1.0 = Good\n• Above 1.5 = Great\n• Above 2.0 = Excellent\n\nHigher is better!",
+          position: 'top'
+        },
+        {
+          element: '#metrics-cards',
+          title: '📋 Key Metrics',
+          intro: "These cards show important numbers about your portfolio. Hover over any metric to learn more! We've added helpful explanations everywhere.",
+          position: 'top'
+        },
+        {
+          element: '#holdings-table',
+          title: '📝 Your ETF Holdings',
+          intro: "Here's the detailed list of every ETF in your portfolio. Each row shows:\n\n• Ticker: The short code (like VOO)\n• Name: What the ETF actually is\n• Weight: How much of your money goes here\n• Expected Return & Volatility: Performance predictions\n\nHover over column headers to learn more!",
+          position: 'top'
+        },
+        {
+          element: '#next-steps',
+          title: "🚀 What's Next?",
+          intro: "Ready to invest for real? Follow these steps to turn your portfolio from a plan into reality. Remember: this is educational - consider talking to a financial advisor before investing real money!",
+          position: 'top'
+        },
+        {
+          title: '🎓 You Did It!',
+          intro: "You now understand the basics of portfolio investing! Remember:\n\n✅ Diversification reduces risk\n✅ Higher returns = higher risk\n✅ The Sharpe Ratio measures efficiency\n✅ ETFs make investing simple\n\nHover over any element with a ❓ to learn more. Happy investing!"
+        }
+      ],
+      showProgress: true,
+      showBullets: true,
+      showStepNumbers: false,
+      nextLabel: 'Next →',
+      prevLabel: '← Back',
+      doneLabel: "Let's Go! ✓",
+      skipLabel: '×',
+      tooltipClass: 'custom-introjs-tooltip',
+      highlightClass: 'custom-introjs-highlight',
+      exitOnOverlayClick: false,
+      disableInteraction: false,
+      scrollToElement: true,
+      scrollPadding: 100
+    })
+
+    intro.start()
+  }, [])
+
+  // Check if user has seen the tour before
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('portfolioTourCompleted')
+    if (!hasSeenTour && hasPortfolio && portfolio) {
+      setShowTour(true)
+    }
+  }, [hasPortfolio, portfolio])
+
+  // Auto-start tour for first-time users
+  useEffect(() => {
+    if (showTour && portfolio) {
+      const timer = setTimeout(() => {
+        startTour()
+        localStorage.setItem('portfolioTourCompleted', 'true')
+        setShowTour(false)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [showTour, portfolio, startTour])
 
   useEffect(() => {
     // Check if portfolio has been generated
@@ -243,19 +478,170 @@ export default function PortfolioPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
+      {/* Custom Intro.js styles */}
+      <style jsx global>{`
+        .introjs-tooltip {
+          max-width: 420px !important;
+          font-family: inherit !important;
+          border-radius: 1rem !important;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+          border: none !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+        }
+        .introjs-tooltip-header {
+          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+          padding: 1rem 1.25rem !important;
+          padding-right: 2.5rem !important;
+          border-bottom: none !important;
+        }
+        .introjs-tooltip-title {
+          font-size: 1.1rem !important;
+          font-weight: 700 !important;
+          color: white !important;
+          margin: 0 !important;
+        }
+        .introjs-tooltiptext {
+          font-size: 0.95rem !important;
+          line-height: 1.7 !important;
+          color: #374151 !important;
+          white-space: pre-line !important;
+          padding: 1.25rem !important;
+          background: white !important;
+        }
+        .introjs-tooltipbuttons {
+          padding: 0.75rem 1.25rem 1.25rem !important;
+          border-top: 1px solid #e5e7eb !important;
+          background: #f9fafb !important;
+        }
+        .introjs-button {
+          border-radius: 0.5rem !important;
+          padding: 0.6rem 1.25rem !important;
+          font-weight: 600 !important;
+          text-shadow: none !important;
+          font-size: 0.875rem !important;
+          transition: all 0.2s ease !important;
+        }
+        .introjs-button:hover {
+          transform: translateY(-1px) !important;
+        }
+        .introjs-nextbutton {
+          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+          border: none !important;
+          color: white !important;
+          box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.4) !important;
+        }
+        .introjs-nextbutton:hover {
+          box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.5) !important;
+        }
+        .introjs-prevbutton {
+          background: white !important;
+          border: 2px solid #e5e7eb !important;
+          color: #374151 !important;
+          margin-right: 0.5rem !important;
+        }
+        .introjs-prevbutton:hover {
+          border-color: #6366f1 !important;
+          color: #6366f1 !important;
+        }
+        .introjs-skipbutton {
+          position: absolute !important;
+          top: 0.75rem !important;
+          right: 0.75rem !important;
+          width: 28px !important;
+          height: 28px !important;
+          padding: 0 !important;
+          font-size: 1.25rem !important;
+          line-height: 28px !important;
+          text-align: center !important;
+          color: rgba(255, 255, 255, 0.8) !important;
+          background: rgba(255, 255, 255, 0.15) !important;
+          border-radius: 50% !important;
+          transition: all 0.2s ease !important;
+        }
+        .introjs-skipbutton:hover {
+          background: rgba(255, 255, 255, 0.3) !important;
+          color: white !important;
+        }
+        .introjs-helperLayer {
+          border-radius: 1rem !important;
+          box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.5) !important;
+        }
+        .introjs-arrow {
+          border: none !important;
+        }
+        .introjs-arrow.top {
+          border-bottom: 10px solid #6366f1 !important;
+        }
+        .introjs-arrow.bottom {
+          border-top: 10px solid white !important;
+        }
+        .introjs-arrow.left {
+          border-right: 10px solid #6366f1 !important;
+        }
+        .introjs-arrow.right {
+          border-left: 10px solid #6366f1 !important;
+        }
+        .introjs-progress {
+          background-color: rgba(255, 255, 255, 0.3) !important;
+          height: 4px !important;
+          margin: 0.5rem 1.25rem 0 !important;
+          border-radius: 2px !important;
+        }
+        .introjs-progressbar {
+          background: white !important;
+          border-radius: 2px !important;
+        }
+        .introjs-bullets {
+          padding: 0.5rem 0 0 !important;
+        }
+        .introjs-bullets ul li a {
+          width: 8px !important;
+          height: 8px !important;
+          background: #d1d5db !important;
+        }
+        .introjs-bullets ul li a.active {
+          background: #6366f1 !important;
+          width: 20px !important;
+          border-radius: 4px !important;
+        }
+        .introjs-donebutton {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+          border: none !important;
+          color: white !important;
+          box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.4) !important;
+        }
+        .introjs-donebutton:hover {
+          box-shadow: 0 6px 20px 0 rgba(16, 185, 129, 0.5) !important;
+        }
+      `}</style>
+
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Header */}
+        {/* Header with Tour Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Optimized Portfolio</h1>
-          <p className="text-gray-600">Personalized allocation based on your risk profile and Sharpe ratio optimization</p>
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Optimized Portfolio</h1>
+            <p className="text-gray-600">Personalized allocation based on your risk profile and Sharpe ratio optimization</p>
+          </div>
+          <button
+            onClick={() => {
+              startTour()
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+          >
+            <PlayIcon className="h-5 w-5" />
+            Take the Tour
+            <AcademicCapIcon className="h-5 w-5" />
+          </button>
         </motion.div>
 
         {/* Hero Card */}
         <motion.div
+          id="risk-profile-card"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -263,17 +649,39 @@ export default function PortfolioPage() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Risk Profile: {portfolio.risk_profile}</h2>
+              <EducationalTooltip content="riskProfile">
+                <h2 className="text-3xl font-bold mb-2 flex items-center gap-2">
+                  Risk Profile: {portfolio.risk_profile}
+                  <QuestionMarkCircleIcon className="h-6 w-6 opacity-70 hover:opacity-100" />
+                </h2>
+              </EducationalTooltip>
               <p className="text-lg opacity-90">Risk Score: {portfolio.risk_score}/10</p>
-              <p className="opacity-80 mt-2">Optimized for risk-adjusted returns using Sharpe ratio</p>
+              <EducationalTooltip content="sharpeRatio">
+                <p className="opacity-80 mt-2 flex items-center gap-1 cursor-help">
+                  Optimized for risk-adjusted returns using Sharpe ratio
+                  <QuestionMarkCircleIcon className="h-4 w-4 opacity-70 hover:opacity-100" />
+                </p>
+              </EducationalTooltip>
             </div>
-            <div className="text-center md:text-right">
-              <div className="text-5xl font-bold mb-2">{portfolio.metrics.expected_return.toFixed(1)}%</div>
-              <div className="text-lg opacity-90">Expected Annual Return</div>
-              <div className="mt-3 px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                <div className="text-sm opacity-80">Total Holdings</div>
-                <div className="text-2xl font-bold">{portfolio.allocations.length} ETFs</div>
-              </div>
+            <div id="expected-return-display" className="text-center md:text-right">
+              <EducationalTooltip content="expectedReturn">
+                <div className="cursor-help">
+                  <div className="text-5xl font-bold mb-2 flex items-center justify-center md:justify-end gap-2">
+                    {portfolio.metrics.expected_return.toFixed(1)}%
+                    <QuestionMarkCircleIcon className="h-7 w-7 opacity-70 hover:opacity-100" />
+                  </div>
+                  <div className="text-lg opacity-90">Expected Annual Return</div>
+                </div>
+              </EducationalTooltip>
+              <EducationalTooltip content="etf">
+                <div className="mt-3 px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm cursor-help">
+                  <div className="text-sm opacity-80 flex items-center justify-center gap-1">
+                    Total Holdings
+                    <QuestionMarkCircleIcon className="h-4 w-4 opacity-70 hover:opacity-100" />
+                  </div>
+                  <div className="text-2xl font-bold">{portfolio.allocations.length} ETFs</div>
+                </div>
+              </EducationalTooltip>
             </div>
           </div>
         </motion.div>
@@ -281,6 +689,7 @@ export default function PortfolioPage() {
         {/* AI Recommendation */}
         {portfolio.ai_recommendation && (
           <motion.div
+            id="ai-recommendation"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
@@ -289,7 +698,10 @@ export default function PortfolioPage() {
             <div className="flex items-start gap-3">
               <SparklesIcon className="h-6 w-6 text-purple-600 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="text-lg font-bold text-purple-900 mb-2">AI Portfolio Insights</h3>
+                <h3 className="text-lg font-bold text-purple-900 mb-2 flex items-center gap-2">
+                  AI Portfolio Insights
+                  <span className="text-xs font-normal bg-purple-200 text-purple-700 px-2 py-1 rounded-full">Powered by Gemini</span>
+                </h3>
                 <p className="text-purple-800 whitespace-pre-line">{portfolio.ai_recommendation}</p>
               </div>
             </div>
@@ -300,15 +712,19 @@ export default function PortfolioPage() {
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
           {/* Donut Chart */}
           <motion.div
+            id="portfolio-chart"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-white rounded-3xl shadow-xl p-6"
           >
-            <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-              <ChartBarIcon className="h-6 w-6 text-primary-600" />
-              Portfolio Allocation
-            </h3>
+            <EducationalTooltip content="allocation">
+              <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2 cursor-help">
+                <ChartBarIcon className="h-6 w-6 text-primary-600" />
+                Portfolio Allocation
+                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-primary-600" />
+              </h3>
+            </EducationalTooltip>
             <div className="h-96">
               <Doughnut data={donutData} options={donutOptions} />
             </div>
@@ -316,18 +732,29 @@ export default function PortfolioPage() {
 
           {/* Asset Class Summary */}
           <motion.div
+            id="asset-breakdown"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
             className="bg-white rounded-3xl shadow-xl p-6"
           >
-            <h3 className="text-2xl font-semibold mb-6">Asset Class Breakdown</h3>
+            <EducationalTooltip content="diversification">
+              <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2 cursor-help">
+                Asset Class Breakdown
+                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-primary-600" />
+              </h3>
+            </EducationalTooltip>
             <div className="space-y-6">
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-700">Bonds</span>
-                  <span className="font-bold text-blue-600">{portfolio.metrics.category_breakdown?.bonds?.toFixed(1) || 0}%</span>
-                </div>
+                <EducationalTooltip content="bonds">
+                  <div className="flex justify-between mb-2 cursor-help">
+                    <span className="font-medium text-gray-700 flex items-center gap-1">
+                      🏦 Bonds
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-blue-600" />
+                    </span>
+                    <span className="font-bold text-blue-600">{portfolio.metrics.category_breakdown?.bonds?.toFixed(1) || 0}%</span>
+                  </div>
+                </EducationalTooltip>
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
@@ -339,10 +766,15 @@ export default function PortfolioPage() {
               </div>
 
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-700">Stocks</span>
-                  <span className="font-bold text-green-600">{portfolio.metrics.category_breakdown?.stocks?.toFixed(1) || 0}%</span>
-                </div>
+                <EducationalTooltip content="stocks">
+                  <div className="flex justify-between mb-2 cursor-help">
+                    <span className="font-medium text-gray-700 flex items-center gap-1">
+                      📈 Stocks
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-green-600" />
+                    </span>
+                    <span className="font-bold text-green-600">{portfolio.metrics.category_breakdown?.stocks?.toFixed(1) || 0}%</span>
+                  </div>
+                </EducationalTooltip>
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
@@ -354,10 +786,15 @@ export default function PortfolioPage() {
               </div>
 
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="font-medium text-gray-700">Alternatives</span>
-                  <span className="font-bold text-purple-600">{portfolio.metrics.category_breakdown?.alternatives?.toFixed(1) || 0}%</span>
-                </div>
+                <EducationalTooltip content="alternatives">
+                  <div className="flex justify-between mb-2 cursor-help">
+                    <span className="font-medium text-gray-700 flex items-center gap-1">
+                      💎 Alternatives
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-purple-600" />
+                    </span>
+                    <span className="font-bold text-purple-600">{portfolio.metrics.category_breakdown?.alternatives?.toFixed(1) || 0}%</span>
+                  </div>
+                </EducationalTooltip>
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
@@ -369,12 +806,21 @@ export default function PortfolioPage() {
               </div>
 
               {/* Sharpe Ratio Score */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <div className="text-center">
-                  <div className="text-sm text-gray-600 mb-2">Sharpe Ratio</div>
-                  <div className="text-4xl font-bold text-primary-600">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
-                  <p className="text-sm text-gray-500 mt-2">Risk-adjusted return metric</p>
-                </div>
+              <div id="sharpe-ratio-display" className="mt-8 pt-6 border-t border-gray-200">
+                <EducationalTooltip content="sharpeRatio">
+                  <div className="text-center cursor-help">
+                    <div className="text-sm text-gray-600 mb-2 flex items-center justify-center gap-1">
+                      Sharpe Ratio
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-primary-600" />
+                    </div>
+                    <div className="text-4xl font-bold text-primary-600">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      {portfolio.metrics.sharpe_ratio >= 2 ? '🌟 Excellent!' :
+                       portfolio.metrics.sharpe_ratio >= 1.5 ? '✨ Great!' :
+                       portfolio.metrics.sharpe_ratio >= 1 ? '👍 Good' : '📊 Moderate'}
+                    </p>
+                  </div>
+                </EducationalTooltip>
               </div>
             </div>
           </motion.div>
@@ -382,67 +828,124 @@ export default function PortfolioPage() {
 
         {/* Portfolio Metrics */}
         <motion.div
+          id="metrics-cards"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-500">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-600">Expected Return</div>
-              <InformationCircleIcon className="h-5 w-5 text-gray-400" />
+          <EducationalTooltip content="expectedReturn">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-500 cursor-help hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Expected Return</div>
+                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-600" />
+              </div>
+              <div className="text-3xl font-bold text-green-600">{portfolio.metrics.expected_return.toFixed(1)}%</div>
+              <div className="text-xs text-gray-500 mt-1">📈 Annualized</div>
             </div>
-            <div className="text-3xl font-bold text-green-600">{portfolio.metrics.expected_return.toFixed(1)}%</div>
-            <div className="text-xs text-gray-500 mt-1">Annualized</div>
-          </div>
+          </EducationalTooltip>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-yellow-500">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-600">Volatility (Risk)</div>
-              <InformationCircleIcon className="h-5 w-5 text-gray-400" />
+          <EducationalTooltip content="volatility">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-yellow-500 cursor-help hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Volatility (Risk)</div>
+                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-yellow-600" />
+              </div>
+              <div className="text-3xl font-bold text-yellow-600">{portfolio.metrics.expected_volatility.toFixed(1)}%</div>
+              <div className="text-xs text-gray-500 mt-1">🎢 Standard Deviation</div>
             </div>
-            <div className="text-3xl font-bold text-yellow-600">{portfolio.metrics.expected_volatility.toFixed(1)}%</div>
-            <div className="text-xs text-gray-500 mt-1">Standard Deviation</div>
-          </div>
+          </EducationalTooltip>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-500">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-600">Sharpe Ratio</div>
-              <InformationCircleIcon className="h-5 w-5 text-gray-400" />
+          <EducationalTooltip content="sharpeRatio">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-500 cursor-help hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Sharpe Ratio</div>
+                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-blue-600" />
+              </div>
+              <div className="text-3xl font-bold text-blue-600">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
+              <div className="text-xs text-gray-500 mt-1">⚖️ Risk-Adjusted Return</div>
             </div>
-            <div className="text-3xl font-bold text-blue-600">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
-            <div className="text-xs text-gray-500 mt-1">Risk-Adjusted Return</div>
-          </div>
+          </EducationalTooltip>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-purple-500">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-gray-600">Risk Profile</div>
-              <InformationCircleIcon className="h-5 w-5 text-gray-400" />
+          <EducationalTooltip content="riskProfile">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-purple-500 cursor-help hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Risk Profile</div>
+                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-purple-600" />
+              </div>
+              <div className="text-3xl font-bold text-purple-600">{portfolio.risk_score.toFixed(1)}/10</div>
+              <div className="text-xs text-gray-500 mt-1">🎯 {portfolio.risk_profile}</div>
             </div>
-            <div className="text-3xl font-bold text-purple-600">{portfolio.risk_score.toFixed(1)}/10</div>
-            <div className="text-xs text-gray-500 mt-1">{portfolio.risk_profile}</div>
-          </div>
+          </EducationalTooltip>
         </motion.div>
 
         {/* Detailed Holdings Table */}
         <motion.div
+          id="holdings-table"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="bg-white rounded-3xl shadow-xl p-6 mb-8"
         >
-          <h3 className="text-2xl font-semibold mb-6">Detailed ETF Holdings</h3>
+          <EducationalTooltip content="etf">
+            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2 cursor-help">
+              Detailed ETF Holdings
+              <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-primary-600" />
+            </h3>
+          </EducationalTooltip>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Ticker</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <EducationalTooltip content="etf">
+                      <span className="flex items-center gap-1 cursor-help">
+                        Ticker
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                      </span>
+                    </EducationalTooltip>
+                  </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">ETF Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Category</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Allocation</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Expected Return</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Volatility</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Risk</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <EducationalTooltip content="diversification">
+                      <span className="flex items-center gap-1 cursor-help">
+                        Category
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                      </span>
+                    </EducationalTooltip>
+                  </th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                    <EducationalTooltip content="allocation">
+                      <span className="flex items-center gap-1 justify-end cursor-help">
+                        Allocation
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                      </span>
+                    </EducationalTooltip>
+                  </th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                    <EducationalTooltip content="expectedReturn">
+                      <span className="flex items-center gap-1 justify-end cursor-help">
+                        Exp. Return
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                      </span>
+                    </EducationalTooltip>
+                  </th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                    <EducationalTooltip content="volatility">
+                      <span className="flex items-center gap-1 justify-end cursor-help">
+                        Volatility
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                      </span>
+                    </EducationalTooltip>
+                  </th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-700">
+                    <EducationalTooltip content="riskLevel">
+                      <span className="flex items-center gap-1 justify-center cursor-help">
+                        Risk
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                      </span>
+                    </EducationalTooltip>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -466,6 +969,7 @@ export default function PortfolioPage() {
                     <td className="py-4 px-4 text-gray-700">{holding.name}</td>
                     <td className="py-4 px-4">
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${getCategoryColor(holding.category)}`}>
+                        {holding.category === 'bonds' ? '🏦 ' : holding.category === 'stocks' ? '📈 ' : '💎 '}
                         {holding.category}
                       </span>
                     </td>
@@ -484,11 +988,42 @@ export default function PortfolioPage() {
           </div>
         </motion.div>
 
-        {/* Next Steps */}
+        {/* Educational Quick Tips */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.55 }}
+          className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 mb-8"
+        >
+          <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center gap-2">
+            <LightBulbIcon className="h-6 w-6" />
+            Quick Investment Tips
+          </h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-white/60 rounded-xl p-4">
+              <div className="text-2xl mb-2">🎯</div>
+              <h4 className="font-semibold text-amber-800 mb-1">Stay the Course</h4>
+              <p className="text-sm text-amber-700">Don't panic sell during market dips. Time in the market beats timing the market!</p>
+            </div>
+            <div className="bg-white/60 rounded-xl p-4">
+              <div className="text-2xl mb-2">🔄</div>
+              <h4 className="font-semibold text-amber-800 mb-1">Rebalance Regularly</h4>
+              <p className="text-sm text-amber-700">Check your portfolio quarterly and rebalance if allocations drift more than 5%.</p>
+            </div>
+            <div className="bg-white/60 rounded-xl p-4">
+              <div className="text-2xl mb-2">💰</div>
+              <h4 className="font-semibold text-amber-800 mb-1">Dollar-Cost Average</h4>
+              <p className="text-sm text-amber-700">Invest a fixed amount regularly, regardless of market conditions. It reduces timing risk!</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Next Steps */}
+        <motion.div
+          id="next-steps"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
           className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-8 mb-8"
         >
           <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
@@ -523,7 +1058,7 @@ export default function PortfolioPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.7 }}
           className="flex flex-col sm:flex-row gap-4 justify-center mb-8"
         >
           <button
@@ -538,6 +1073,16 @@ export default function PortfolioPage() {
             Retake Assessment
           </button>
           <button
+            onClick={() => {
+              localStorage.removeItem('portfolioTourCompleted')
+              startTour()
+            }}
+            className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+          >
+            <AcademicCapIcon className="h-5 w-5" />
+            Replay Tutorial
+          </button>
+          <button
             onClick={() => router.push('/')}
             className="px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
           >
@@ -549,7 +1094,7 @@ export default function PortfolioPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.9 }}
+          transition={{ delay: 0.8 }}
           className="bg-yellow-50 border border-yellow-200 rounded-xl p-6"
         >
           <p className="text-sm text-yellow-800">
