@@ -6,8 +6,7 @@ import { Doughnut } from 'react-chartjs-2'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import introJs from 'intro.js'
-import 'intro.js/introjs.css'
+import dynamic from 'next/dynamic'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -65,6 +64,26 @@ interface PortfolioData {
   metrics: PortfolioMetrics
   ai_recommendation?: string
   created_at?: string
+}
+
+// Color utilities for dark theme
+const getRiskLevelColorDark = (level: number) => {
+  if (level <= 3) return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+  if (level <= 6) return 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+  return 'bg-red-500/20 text-red-400 border-red-500/30'
+}
+
+const getCategoryColorDark = (category: string) => {
+  switch (category) {
+    case 'bonds':
+      return 'bg-blue-500/20 text-blue-400'
+    case 'stocks':
+      return 'bg-emerald-500/20 text-emerald-400'
+    case 'alternatives':
+      return 'bg-purple-500/20 text-purple-400'
+    default:
+      return 'bg-neutral-500/20 text-neutral-400'
+  }
 }
 
 // Educational content for tooltips
@@ -166,20 +185,20 @@ const EducationalTooltip = ({
             transition={{ duration: 0.2 }}
             className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-80 pointer-events-none"
           >
-            <div className="bg-gray-900 text-white rounded-xl p-4 shadow-2xl">
+            <div className="bg-dark-800 border border-neutral-700 text-white rounded-xl p-4 shadow-2xl">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">{info.emoji}</span>
                 <h4 className="font-bold text-lg">{info.title}</h4>
               </div>
-              <p className="text-gray-200 text-sm mb-3">{info.simple}</p>
-              <div className="bg-gray-800 rounded-lg p-3">
+              <p className="text-neutral-300 text-sm mb-3">{info.simple}</p>
+              <div className="bg-dark-900 rounded-lg p-3">
                 <div className="flex items-start gap-2">
-                  <LightBulbIcon className="h-4 w-4 text-yellow-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-gray-300 text-xs">{info.example}</p>
+                  <LightBulbIcon className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-neutral-400 text-xs">{info.example}</p>
                 </div>
               </div>
               {/* Arrow */}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-dark-800"></div>
             </div>
           </motion.div>
         )}
@@ -196,7 +215,11 @@ export default function PortfolioPage() {
   const [showTour, setShowTour] = useState(false)
 
   // Start the intro.js tour
-  const startTour = useCallback(() => {
+  const startTour = useCallback(async () => {
+    // Dynamically import intro.js to avoid SSR issues
+    const introJs = (await import('intro.js')).default
+    await import('intro.js/introjs.css')
+
     const intro = introJs()
 
     intro.setOptions({
@@ -392,10 +415,10 @@ export default function PortfolioPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading portfolio...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-2 border-primary-500/20 border-t-primary-500 mx-auto"></div>
+          <p className="mt-4 text-neutral-400">Loading portfolio...</p>
         </div>
       </div>
     )
@@ -403,29 +426,29 @@ export default function PortfolioPage() {
 
   if (!hasPortfolio || !portfolio) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-2xl mx-auto px-4 text-center"
         >
-          <div className="bg-white rounded-3xl shadow-xl p-12">
-            <ChartBarIcon className="h-24 w-24 text-gray-300 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">No Portfolio Yet</h1>
-            <p className="text-gray-600 mb-8">
+          <div className="card p-12">
+            <ChartBarIcon className="h-24 w-24 text-neutral-600 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-white mb-4">No Portfolio Yet</h1>
+            <p className="text-neutral-400 mb-8">
               You haven't generated your optimized portfolio yet. Complete the risk assessment first,
               then generate your personalized investment portfolio.
             </p>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => router.push('/assessment')}
-                className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="btn-gradient"
               >
                 Take Assessment
               </button>
               <button
                 onClick={() => router.push('/')}
-                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                className="btn-secondary"
               >
                 Go Home
               </button>
@@ -478,20 +501,21 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
-      {/* Custom Intro.js styles */}
+    <div className="min-h-screen bg-dark-950">
+      {/* Custom Intro.js styles for dark theme */}
       <style jsx global>{`
         .introjs-tooltip {
           max-width: 420px !important;
           font-family: inherit !important;
           border-radius: 1rem !important;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-          border: none !important;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+          border: 1px solid rgba(63, 63, 70, 0.5) !important;
           padding: 0 !important;
           overflow: hidden !important;
+          background: #1a1a24 !important;
         }
         .introjs-tooltip-header {
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+          background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
           padding: 1rem 1.25rem !important;
           padding-right: 2.5rem !important;
           border-bottom: none !important;
@@ -505,18 +529,18 @@ export default function PortfolioPage() {
         .introjs-tooltiptext {
           font-size: 0.95rem !important;
           line-height: 1.7 !important;
-          color: #374151 !important;
+          color: #a1a1aa !important;
           white-space: pre-line !important;
           padding: 1.25rem !important;
-          background: white !important;
+          background: #1a1a24 !important;
         }
         .introjs-tooltipbuttons {
           padding: 0.75rem 1.25rem 1.25rem !important;
-          border-top: 1px solid #e5e7eb !important;
-          background: #f9fafb !important;
+          border-top: 1px solid #3f3f46 !important;
+          background: #0d0d14 !important;
         }
         .introjs-button {
-          border-radius: 0.5rem !important;
+          border-radius: 0.75rem !important;
           padding: 0.6rem 1.25rem !important;
           font-weight: 600 !important;
           text-shadow: none !important;
@@ -527,7 +551,7 @@ export default function PortfolioPage() {
           transform: translateY(-1px) !important;
         }
         .introjs-nextbutton {
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+          background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;
           border: none !important;
           color: white !important;
           box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.4) !important;
@@ -536,14 +560,14 @@ export default function PortfolioPage() {
           box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.5) !important;
         }
         .introjs-prevbutton {
-          background: white !important;
-          border: 2px solid #e5e7eb !important;
-          color: #374151 !important;
+          background: #2d2d3a !important;
+          border: 1px solid #3f3f46 !important;
+          color: #a1a1aa !important;
           margin-right: 0.5rem !important;
         }
         .introjs-prevbutton:hover {
           border-color: #6366f1 !important;
-          color: #6366f1 !important;
+          color: white !important;
         }
         .introjs-skipbutton {
           position: absolute !important;
@@ -566,7 +590,7 @@ export default function PortfolioPage() {
         }
         .introjs-helperLayer {
           border-radius: 1rem !important;
-          box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.5) !important;
+          box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.8), 0 0 0 4px rgba(99, 102, 241, 0.5) !important;
         }
         .introjs-arrow {
           border: none !important;
@@ -575,7 +599,7 @@ export default function PortfolioPage() {
           border-bottom: 10px solid #6366f1 !important;
         }
         .introjs-arrow.bottom {
-          border-top: 10px solid white !important;
+          border-top: 10px solid #1a1a24 !important;
         }
         .introjs-arrow.left {
           border-right: 10px solid #6366f1 !important;
@@ -584,7 +608,7 @@ export default function PortfolioPage() {
           border-left: 10px solid #6366f1 !important;
         }
         .introjs-progress {
-          background-color: rgba(255, 255, 255, 0.3) !important;
+          background-color: rgba(255, 255, 255, 0.2) !important;
           height: 4px !important;
           margin: 0.5rem 1.25rem 0 !important;
           border-radius: 2px !important;
@@ -599,7 +623,7 @@ export default function PortfolioPage() {
         .introjs-bullets ul li a {
           width: 8px !important;
           height: 8px !important;
-          background: #d1d5db !important;
+          background: #3f3f46 !important;
         }
         .introjs-bullets ul li a.active {
           background: #6366f1 !important;
@@ -625,14 +649,14 @@ export default function PortfolioPage() {
           className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
         >
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Your Optimized Portfolio</h1>
-            <p className="text-gray-600">Personalized allocation based on your risk profile and Sharpe ratio optimization</p>
+            <h1 className="text-4xl font-bold text-white mb-2">Your Optimized Portfolio</h1>
+            <p className="text-neutral-400">Personalized allocation based on your risk profile and Sharpe ratio optimization</p>
           </div>
           <button
             onClick={() => {
               startTour()
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary-500/25 transition-all"
           >
             <PlayIcon className="h-5 w-5" />
             Take the Tour
@@ -646,7 +670,7 @@ export default function PortfolioPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-3xl p-8 text-white mb-8 shadow-xl"
+          className="bg-gradient-to-r from-primary-600 via-primary-500 to-accent-500 rounded-2xl p-8 text-white mb-8 shadow-xl shadow-primary-500/20"
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div>
@@ -694,16 +718,16 @@ export default function PortfolioPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-2xl p-6 mb-8"
+            className="card p-6 mb-8 border-l-4 border-l-primary-500"
           >
             <div className="flex items-start gap-3">
-              <SparklesIcon className="h-6 w-6 text-purple-600 flex-shrink-0 mt-1" />
+              <SparklesIcon className="h-6 w-6 text-primary-400 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="text-lg font-bold text-purple-900 mb-2 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
                   AI Portfolio Insights
-                  <span className="text-xs font-normal bg-purple-200 text-purple-700 px-2 py-1 rounded-full">Powered by Gemini</span>
+                  <span className="text-xs font-normal bg-primary-500/20 text-primary-400 px-2 py-1 rounded-full">Powered by Gemini</span>
                 </h3>
-                <p className="text-purple-800 whitespace-pre-line">{portfolio.ai_recommendation}</p>
+                <p className="text-neutral-300 whitespace-pre-line">{portfolio.ai_recommendation}</p>
               </div>
             </div>
           </motion.div>
@@ -717,13 +741,13 @@ export default function PortfolioPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-3xl shadow-xl p-6"
+            className="card p-6"
           >
             <EducationalTooltip content="allocation">
-              <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2 cursor-help">
-                <ChartBarIcon className="h-6 w-6 text-primary-600" />
+              <h3 className="text-2xl font-semibold mb-4 flex items-center gap-2 cursor-help text-white">
+                <ChartBarIcon className="h-6 w-6 text-primary-400" />
                 Portfolio Allocation
-                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-primary-600" />
+                <QuestionMarkCircleIcon className="h-5 w-5 text-neutral-500 hover:text-primary-400" />
               </h3>
             </EducationalTooltip>
             <div className="h-96">
@@ -737,31 +761,31 @@ export default function PortfolioPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-3xl shadow-xl p-6"
+            className="card p-6"
           >
             <EducationalTooltip content="diversification">
-              <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2 cursor-help">
+              <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2 cursor-help text-white">
                 Asset Class Breakdown
-                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-primary-600" />
+                <QuestionMarkCircleIcon className="h-5 w-5 text-neutral-500 hover:text-primary-400" />
               </h3>
             </EducationalTooltip>
             <div className="space-y-6">
               <div>
                 <EducationalTooltip content="bonds">
                   <div className="flex justify-between mb-2 cursor-help">
-                    <span className="font-medium text-gray-700 flex items-center gap-1">
+                    <span className="font-medium text-neutral-300 flex items-center gap-1">
                       🏦 Bonds
-                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-blue-600" />
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500 hover:text-blue-400" />
                     </span>
-                    <span className="font-bold text-blue-600">{portfolio.metrics.category_breakdown?.bonds?.toFixed(1) || 0}%</span>
+                    <span className="font-bold text-blue-400">{portfolio.metrics.category_breakdown?.bonds?.toFixed(1) || 0}%</span>
                   </div>
                 </EducationalTooltip>
-                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${portfolio.metrics.category_breakdown?.bonds || 0}%` }}
                     transition={{ delay: 0.5, duration: 1 }}
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600"
+                    className="h-full bg-gradient-to-r from-blue-500 to-blue-400"
                   />
                 </div>
               </div>
@@ -769,19 +793,19 @@ export default function PortfolioPage() {
               <div>
                 <EducationalTooltip content="stocks">
                   <div className="flex justify-between mb-2 cursor-help">
-                    <span className="font-medium text-gray-700 flex items-center gap-1">
+                    <span className="font-medium text-neutral-300 flex items-center gap-1">
                       📈 Stocks
-                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-green-600" />
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500 hover:text-emerald-400" />
                     </span>
-                    <span className="font-bold text-green-600">{portfolio.metrics.category_breakdown?.stocks?.toFixed(1) || 0}%</span>
+                    <span className="font-bold text-emerald-400">{portfolio.metrics.category_breakdown?.stocks?.toFixed(1) || 0}%</span>
                   </div>
                 </EducationalTooltip>
-                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${portfolio.metrics.category_breakdown?.stocks || 0}%` }}
                     transition={{ delay: 0.6, duration: 1 }}
-                    className="h-full bg-gradient-to-r from-green-500 to-green-600"
+                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400"
                   />
                 </div>
               </div>
@@ -789,33 +813,33 @@ export default function PortfolioPage() {
               <div>
                 <EducationalTooltip content="alternatives">
                   <div className="flex justify-between mb-2 cursor-help">
-                    <span className="font-medium text-gray-700 flex items-center gap-1">
+                    <span className="font-medium text-neutral-300 flex items-center gap-1">
                       💎 Alternatives
-                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-purple-600" />
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500 hover:text-purple-400" />
                     </span>
-                    <span className="font-bold text-purple-600">{portfolio.metrics.category_breakdown?.alternatives?.toFixed(1) || 0}%</span>
+                    <span className="font-bold text-purple-400">{portfolio.metrics.category_breakdown?.alternatives?.toFixed(1) || 0}%</span>
                   </div>
                 </EducationalTooltip>
-                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${portfolio.metrics.category_breakdown?.alternatives || 0}%` }}
                     transition={{ delay: 0.7, duration: 1 }}
-                    className="h-full bg-gradient-to-r from-purple-500 to-purple-600"
+                    className="h-full bg-gradient-to-r from-purple-500 to-purple-400"
                   />
                 </div>
               </div>
 
               {/* Sharpe Ratio Score */}
-              <div id="sharpe-ratio-display" className="mt-8 pt-6 border-t border-gray-200">
+              <div id="sharpe-ratio-display" className="mt-8 pt-6 border-t border-neutral-800">
                 <EducationalTooltip content="sharpeRatio">
                   <div className="text-center cursor-help">
-                    <div className="text-sm text-gray-600 mb-2 flex items-center justify-center gap-1">
+                    <div className="text-sm text-neutral-400 mb-2 flex items-center justify-center gap-1">
                       Sharpe Ratio
-                      <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400 hover:text-primary-600" />
+                      <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500 hover:text-primary-400" />
                     </div>
-                    <div className="text-4xl font-bold text-primary-600">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <div className="text-4xl font-bold text-primary-400">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
+                    <p className="text-sm text-neutral-500 mt-2">
                       {portfolio.metrics.sharpe_ratio >= 2 ? '🌟 Excellent!' :
                        portfolio.metrics.sharpe_ratio >= 1.5 ? '✨ Great!' :
                        portfolio.metrics.sharpe_ratio >= 1 ? '👍 Good' : '📊 Moderate'}
@@ -833,49 +857,49 @@ export default function PortfolioPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
         >
           <EducationalTooltip content="expectedReturn">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-green-500 cursor-help hover:shadow-xl transition-shadow">
+            <div className="stat-card cursor-help hover:border-emerald-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">Expected Return</div>
-                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-green-600" />
+                <div className="stat-label">Expected Return</div>
+                <QuestionMarkCircleIcon className="h-5 w-5 text-neutral-500 hover:text-emerald-400" />
               </div>
-              <div className="text-3xl font-bold text-green-600">{portfolio.metrics.expected_return.toFixed(1)}%</div>
-              <div className="text-xs text-gray-500 mt-1">📈 Annualized</div>
+              <div className="stat-value text-emerald-400">{portfolio.metrics.expected_return.toFixed(1)}%</div>
+              <div className="text-xs text-neutral-500 mt-1">📈 Annualized</div>
             </div>
           </EducationalTooltip>
 
           <EducationalTooltip content="volatility">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-yellow-500 cursor-help hover:shadow-xl transition-shadow">
+            <div className="stat-card cursor-help hover:border-amber-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">Volatility (Risk)</div>
-                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-yellow-600" />
+                <div className="stat-label">Volatility (Risk)</div>
+                <QuestionMarkCircleIcon className="h-5 w-5 text-neutral-500 hover:text-amber-400" />
               </div>
-              <div className="text-3xl font-bold text-yellow-600">{portfolio.metrics.expected_volatility.toFixed(1)}%</div>
-              <div className="text-xs text-gray-500 mt-1">🎢 Standard Deviation</div>
+              <div className="stat-value text-amber-400">{portfolio.metrics.expected_volatility.toFixed(1)}%</div>
+              <div className="text-xs text-neutral-500 mt-1">🎢 Standard Deviation</div>
             </div>
           </EducationalTooltip>
 
           <EducationalTooltip content="sharpeRatio">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-blue-500 cursor-help hover:shadow-xl transition-shadow">
+            <div className="stat-card cursor-help hover:border-blue-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">Sharpe Ratio</div>
-                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-blue-600" />
+                <div className="stat-label">Sharpe Ratio</div>
+                <QuestionMarkCircleIcon className="h-5 w-5 text-neutral-500 hover:text-blue-400" />
               </div>
-              <div className="text-3xl font-bold text-blue-600">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
-              <div className="text-xs text-gray-500 mt-1">⚖️ Risk-Adjusted Return</div>
+              <div className="stat-value text-blue-400">{portfolio.metrics.sharpe_ratio.toFixed(2)}</div>
+              <div className="text-xs text-neutral-500 mt-1">⚖️ Risk-Adjusted Return</div>
             </div>
           </EducationalTooltip>
 
           <EducationalTooltip content="riskProfile">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-purple-500 cursor-help hover:shadow-xl transition-shadow">
+            <div className="stat-card cursor-help hover:border-purple-500/30 transition-all">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-600">Risk Profile</div>
-                <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-purple-600" />
+                <div className="stat-label">Risk Profile</div>
+                <QuestionMarkCircleIcon className="h-5 w-5 text-neutral-500 hover:text-purple-400" />
               </div>
-              <div className="text-3xl font-bold text-purple-600">{portfolio.risk_score.toFixed(1)}/10</div>
-              <div className="text-xs text-gray-500 mt-1">🎯 {portfolio.risk_profile}</div>
+              <div className="stat-value text-purple-400">{portfolio.risk_score.toFixed(1)}/10</div>
+              <div className="text-xs text-neutral-500 mt-1">🎯 {portfolio.risk_profile}</div>
             </div>
           </EducationalTooltip>
         </motion.div>
@@ -886,64 +910,64 @@ export default function PortfolioPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white rounded-3xl shadow-xl p-6 mb-8"
+          className="card p-6 mb-8"
         >
           <EducationalTooltip content="etf">
-            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2 cursor-help">
+            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-2 cursor-help text-white">
               Detailed ETF Holdings
-              <QuestionMarkCircleIcon className="h-5 w-5 text-gray-400 hover:text-primary-600" />
+              <QuestionMarkCircleIcon className="h-5 w-5 text-neutral-500 hover:text-primary-400" />
             </h3>
           </EducationalTooltip>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                <tr className="border-b border-neutral-700">
+                  <th className="text-left py-3 px-4 font-semibold text-neutral-300">
                     <EducationalTooltip content="etf">
                       <span className="flex items-center gap-1 cursor-help">
                         Ticker
-                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500" />
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">ETF Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                  <th className="text-left py-3 px-4 font-semibold text-neutral-300">ETF Name</th>
+                  <th className="text-left py-3 px-4 font-semibold text-neutral-300">
                     <EducationalTooltip content="diversification">
                       <span className="flex items-center gap-1 cursor-help">
                         Category
-                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500" />
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                  <th className="text-right py-3 px-4 font-semibold text-neutral-300">
                     <EducationalTooltip content="allocation">
                       <span className="flex items-center gap-1 justify-end cursor-help">
                         Allocation
-                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500" />
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                  <th className="text-right py-3 px-4 font-semibold text-neutral-300">
                     <EducationalTooltip content="expectedReturn">
                       <span className="flex items-center gap-1 justify-end cursor-help">
                         Exp. Return
-                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500" />
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                  <th className="text-right py-3 px-4 font-semibold text-neutral-300">
                     <EducationalTooltip content="volatility">
                       <span className="flex items-center gap-1 justify-end cursor-help">
                         Volatility
-                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500" />
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">
+                  <th className="text-center py-3 px-4 font-semibold text-neutral-300">
                     <EducationalTooltip content="riskLevel">
                       <span className="flex items-center gap-1 justify-center cursor-help">
                         Risk
-                        <QuestionMarkCircleIcon className="h-4 w-4 text-gray-400" />
+                        <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500" />
                       </span>
                     </EducationalTooltip>
                   </th>
@@ -956,7 +980,7 @@ export default function PortfolioPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 + index * 0.05 }}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    className="border-b border-neutral-800 hover:bg-dark-800/50 transition-colors"
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
@@ -964,21 +988,21 @@ export default function PortfolioPage() {
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: colors[index] }}
                         />
-                        <span className="font-bold text-primary-600">{holding.ticker}</span>
+                        <span className="font-bold text-primary-400">{holding.ticker}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-gray-700">{holding.name}</td>
+                    <td className="py-4 px-4 text-neutral-300">{holding.name}</td>
                     <td className="py-4 px-4">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${getCategoryColor(holding.category)}`}>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${getCategoryColorDark(holding.category)}`}>
                         {holding.category === 'bonds' ? '🏦 ' : holding.category === 'stocks' ? '📈 ' : '💎 '}
                         {holding.category}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-right font-bold text-gray-900">{holding.weight.toFixed(1)}%</td>
-                    <td className="py-4 px-4 text-right text-green-600 font-semibold">{holding.expected_return.toFixed(1)}%</td>
-                    <td className="py-4 px-4 text-right text-yellow-600 font-semibold">{holding.volatility.toFixed(1)}%</td>
+                    <td className="py-4 px-4 text-right font-bold text-white">{holding.weight.toFixed(1)}%</td>
+                    <td className="py-4 px-4 text-right text-emerald-400 font-semibold">{holding.expected_return.toFixed(1)}%</td>
+                    <td className="py-4 px-4 text-right text-amber-400 font-semibold">{holding.volatility.toFixed(1)}%</td>
                     <td className="py-4 px-4 text-center">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getRiskLevelColor(holding.risk_level)}`}>
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getRiskLevelColorDark(holding.risk_level)}`}>
                         {getRiskLevelLabel(holding.risk_level)}
                       </span>
                     </td>
@@ -994,27 +1018,27 @@ export default function PortfolioPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.55 }}
-          className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 mb-8"
+          className="card p-6 mb-8 border-l-4 border-l-amber-500"
         >
-          <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center gap-2">
-            <LightBulbIcon className="h-6 w-6" />
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <LightBulbIcon className="h-6 w-6 text-amber-400" />
             Quick Investment Tips
           </h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-white/60 rounded-xl p-4">
+            <div className="bg-dark-800/50 rounded-xl p-4">
               <div className="text-2xl mb-2">🎯</div>
-              <h4 className="font-semibold text-amber-800 mb-1">Stay the Course</h4>
-              <p className="text-sm text-amber-700">Don't panic sell during market dips. Time in the market beats timing the market!</p>
+              <h4 className="font-semibold text-white mb-1">Stay the Course</h4>
+              <p className="text-sm text-neutral-400">Don't panic sell during market dips. Time in the market beats timing the market!</p>
             </div>
-            <div className="bg-white/60 rounded-xl p-4">
+            <div className="bg-dark-800/50 rounded-xl p-4">
               <div className="text-2xl mb-2">🔄</div>
-              <h4 className="font-semibold text-amber-800 mb-1">Rebalance Regularly</h4>
-              <p className="text-sm text-amber-700">Check your portfolio quarterly and rebalance if allocations drift more than 5%.</p>
+              <h4 className="font-semibold text-white mb-1">Rebalance Regularly</h4>
+              <p className="text-sm text-neutral-400">Check your portfolio quarterly and rebalance if allocations drift more than 5%.</p>
             </div>
-            <div className="bg-white/60 rounded-xl p-4">
+            <div className="bg-dark-800/50 rounded-xl p-4">
               <div className="text-2xl mb-2">💰</div>
-              <h4 className="font-semibold text-amber-800 mb-1">Dollar-Cost Average</h4>
-              <p className="text-sm text-amber-700">Invest a fixed amount regularly, regardless of market conditions. It reduces timing risk!</p>
+              <h4 className="font-semibold text-white mb-1">Dollar-Cost Average</h4>
+              <p className="text-sm text-neutral-400">Invest a fixed amount regularly, regardless of market conditions. It reduces timing risk!</p>
             </div>
           </div>
         </motion.div>
@@ -1025,31 +1049,31 @@ export default function PortfolioPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-8 mb-8"
+          className="card p-8 mb-8 border-l-4 border-l-blue-500"
         >
-          <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
-            <InformationCircleIcon className="h-6 w-6" />
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <InformationCircleIcon className="h-6 w-6 text-blue-400" />
             Next Steps
           </h3>
-          <ul className="space-y-3 text-blue-800">
+          <ul className="space-y-3 text-neutral-300">
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">1.</span>
+              <span className="text-blue-400 font-bold">1.</span>
               <span>Review your personalized ETF allocation based on your risk profile</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">2.</span>
+              <span className="text-blue-400 font-bold">2.</span>
               <span>Research each ETF to understand its investment strategy and holdings</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">3.</span>
+              <span className="text-blue-400 font-bold">3.</span>
               <span>Open a brokerage account (e.g., Fidelity, Schwab, Vanguard) if you don't have one</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">4.</span>
+              <span className="text-blue-400 font-bold">4.</span>
               <span>Purchase ETFs according to the recommended allocation percentages</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-600 font-bold">5.</span>
+              <span className="text-blue-400 font-bold">5.</span>
               <span>Rebalance your portfolio quarterly or when allocations drift significantly</span>
             </li>
           </ul>
@@ -1060,7 +1084,7 @@ export default function PortfolioPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65 }}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 mb-8 text-white"
+          className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-8 mb-8 text-white shadow-xl shadow-emerald-500/20"
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
@@ -1071,7 +1095,7 @@ export default function PortfolioPage() {
             </div>
             <button
               onClick={() => router.push('/trading')}
-              className="px-8 py-4 bg-white text-green-600 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 whitespace-nowrap"
+              className="px-8 py-4 bg-white text-emerald-600 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 whitespace-nowrap"
             >
               <BanknotesIcon className="h-5 w-5" />
               Start Paper Trading
@@ -1092,7 +1116,7 @@ export default function PortfolioPage() {
               localStorage.removeItem('portfolioData')
               router.push('/assessment')
             }}
-            className="px-8 py-4 bg-white border-2 border-primary-600 text-primary-600 rounded-xl font-semibold hover:bg-primary-50 transition-all flex items-center justify-center gap-2"
+            className="btn-secondary flex items-center justify-center gap-2"
           >
             <ArrowPathIcon className="h-5 w-5" />
             Retake Assessment
@@ -1102,14 +1126,14 @@ export default function PortfolioPage() {
               localStorage.removeItem('portfolioTourCompleted')
               startTour()
             }}
-            className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            className="btn-gradient flex items-center justify-center gap-2"
           >
             <AcademicCapIcon className="h-5 w-5" />
             Replay Tutorial
           </button>
           <button
             onClick={() => router.push('/')}
-            className="px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+            className="btn-primary"
           >
             Return to Home
           </button>
@@ -1120,10 +1144,10 @@ export default function PortfolioPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="bg-yellow-50 border border-yellow-200 rounded-xl p-6"
+          className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6"
         >
-          <p className="text-sm text-yellow-800">
-            <strong>Disclaimer:</strong> This portfolio recommendation is for educational purposes only and does not constitute financial advice.
+          <p className="text-sm text-amber-300/80">
+            <strong className="text-amber-300">Disclaimer:</strong> This portfolio recommendation is for educational purposes only and does not constitute financial advice.
             Past performance does not guarantee future results. Please consult with a qualified financial advisor before making investment decisions.
             All expected returns and risk metrics are estimates based on historical data and may not reflect actual future performance.
           </p>

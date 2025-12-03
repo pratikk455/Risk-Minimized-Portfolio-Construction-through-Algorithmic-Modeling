@@ -90,11 +90,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-dark-950 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Background gradient effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-radial from-primary-500/10 via-transparent to-transparent" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-radial from-accent-500/10 via-transparent to-transparent" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full"
+        className="max-w-md w-full relative z-10"
       >
         {/* Header */}
         <div className="text-center mb-8">
@@ -102,23 +108,23 @@ export default function LoginPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-full mb-4"
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 via-primary-600 to-accent-500 rounded-2xl mb-4 shadow-lg shadow-primary-500/30"
           >
             <LockClosedIcon className="h-8 w-8 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to access your portfolio</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-neutral-400">Sign in to access your portfolio</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-3xl shadow-xl p-8">
+        <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Error Message */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm"
+                className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm"
               >
                 {error}
               </motion.div>
@@ -126,12 +132,12 @@ export default function LoginPage() {
 
             {/* Username/Email Field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-neutral-300 mb-2">
                 Username or Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <UserIcon className="h-5 w-5 text-neutral-500" />
                 </div>
                 <input
                   type="text"
@@ -140,7 +146,7 @@ export default function LoginPage() {
                   value={formData.username}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="input w-full pl-11"
                   placeholder="Enter your username or email"
                 />
               </div>
@@ -148,12 +154,12 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-300 mb-2">
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <LockClosedIcon className="h-5 w-5 text-neutral-500" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -162,18 +168,18 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="input w-full pl-11 pr-12"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeSlashIcon className="h-5 w-5 text-neutral-500 hover:text-neutral-300 transition-colors" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeIcon className="h-5 w-5 text-neutral-500 hover:text-neutral-300 transition-colors" />
                   )}
                 </button>
               </div>
@@ -183,15 +189,15 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-all ${
+              className={`w-full py-3.5 px-4 rounded-xl font-semibold text-white transition-all ${
                 isLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-primary-600 to-primary-700 hover:shadow-lg'
+                  ? 'bg-neutral-700 cursor-not-allowed'
+                  : 'btn-gradient'
               }`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white"></div>
                   Signing in...
                 </div>
               ) : (
@@ -204,10 +210,10 @@ export default function LoginPage() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-neutral-800"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
+                <span className="px-3 bg-dark-900 text-neutral-500">Don't have an account?</span>
               </div>
             </div>
           </div>
@@ -216,7 +222,7 @@ export default function LoginPage() {
           <div className="mt-6">
             <Link
               href="/signup"
-              className="w-full block text-center py-3 px-4 border-2 border-primary-600 text-primary-600 rounded-xl font-semibold hover:bg-primary-50 transition-all"
+              className="btn-secondary w-full block text-center"
             >
               Create Account
             </Link>
@@ -225,7 +231,7 @@ export default function LoginPage() {
 
         {/* Back to Home */}
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-600 hover:text-primary-600 transition-colors">
+          <Link href="/" className="text-sm text-neutral-500 hover:text-primary-400 transition-colors">
             ← Back to Home
           </Link>
         </div>

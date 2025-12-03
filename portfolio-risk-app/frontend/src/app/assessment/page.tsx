@@ -398,40 +398,40 @@ export default function AssessmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
+    <div className="min-h-screen bg-dark-950">
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Comprehensive Risk Assessment</h1>
-          <p className="text-gray-600">Complete this 30-question assessment (~15 minutes) to determine your personalized investment profile</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Comprehensive Risk Assessment</h1>
+          <p className="text-neutral-400">Complete this 30-question assessment (~15 minutes) to determine your personalized investment profile</p>
         </div>
 
         {/* Section Progress Overview */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Section Progress</h3>
+        <div className="card p-6 mb-6">
+          <h3 className="font-semibold text-white mb-4">Section Progress</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {getSectionProgress().map((section, idx) => (
               <div
                 key={idx}
-                className={`p-3 rounded-lg border-2 ${
+                className={`p-3 rounded-xl border transition-all ${
                   section.completed
-                    ? 'border-green-500 bg-green-50'
+                    ? 'border-emerald-500/50 bg-emerald-500/10'
                     : section.progress > 0
-                    ? 'border-yellow-500 bg-yellow-50'
-                    : 'border-gray-200'
+                    ? 'border-amber-500/50 bg-amber-500/10'
+                    : 'border-neutral-800 bg-dark-800/50'
                 }`}
               >
-                <div className="text-xs font-medium text-gray-700 mb-1">{section.name}</div>
+                <div className="text-xs font-medium text-neutral-300 mb-1">{section.name}</div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="flex-1 h-2 bg-dark-700 rounded-full overflow-hidden">
                     <div
                       className={`h-full transition-all ${
-                        section.completed ? 'bg-green-500' : 'bg-yellow-500'
+                        section.completed ? 'bg-emerald-500' : 'bg-amber-500'
                       }`}
                       style={{ width: `${section.progress}%` }}
                     />
                   </div>
-                  <span className="text-xs font-semibold">{Math.round(section.progress)}%</span>
+                  <span className="text-xs font-semibold text-neutral-400">{Math.round(section.progress)}%</span>
                 </div>
               </div>
             ))}
@@ -439,16 +439,16 @@ export default function AssessmentPage() {
         </div>
 
         {/* Main Question Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="card p-8">
           {/* Overall Progress */}
           <div className="mb-8">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <div className="flex justify-between text-sm text-neutral-400 mb-2">
               <span>Question {currentQuestionIndex + 1} of {questions.length}</span>
               <span>{Math.round(progress)}% Complete</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-dark-700 rounded-full h-3">
               <motion.div
-                className="bg-gradient-to-r from-primary-600 to-accent-600 h-3 rounded-full"
+                className="bg-gradient-to-r from-primary-500 to-accent-500 h-3 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3 }}
@@ -466,27 +466,27 @@ export default function AssessmentPage() {
             >
               {/* Section Badge */}
               <div className="mb-4">
-                <span className="inline-block px-4 py-2 bg-primary-100 text-primary-700 rounded-lg text-sm font-semibold">
+                <span className="inline-block px-4 py-2 bg-primary-500/20 text-primary-400 rounded-xl text-sm font-semibold">
                   {currentSection}
                 </span>
               </div>
 
               {/* Question */}
-              <h2 className="text-2xl font-bold mb-2 text-gray-900">
+              <h2 className="text-2xl font-bold mb-2 text-white">
                 {currentQuestion.question}
               </h2>
               {currentQuestion.description && (
-                <p className="text-gray-600 mb-6 italic">{currentQuestion.description}</p>
+                <p className="text-neutral-400 mb-6 italic">{currentQuestion.description}</p>
               )}
 
               {/* Slider Scale */}
               <div className="mt-8 mb-6">
-                <div className="flex justify-between text-sm text-gray-700 mb-4 px-2">
+                <div className="flex justify-between text-sm text-neutral-300 mb-4 px-2">
                   <span className="text-left max-w-[45%]">
-                    <span className="font-medium">1:</span> {currentQuestion.scale.min.label}
+                    <span className="font-medium text-red-400">1:</span> {currentQuestion.scale.min.label}
                   </span>
                   <span className="text-right max-w-[45%]">
-                    <span className="font-medium">10:</span> {currentQuestion.scale.max.label}
+                    <span className="font-medium text-emerald-400">10:</span> {currentQuestion.scale.max.label}
                   </span>
                 </div>
 
@@ -497,12 +497,12 @@ export default function AssessmentPage() {
                     max="10"
                     value={answers[currentQuestion.id] || 5}
                     onChange={(e) => handleAnswer(parseInt(e.target.value))}
-                    className="w-full h-3 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded-lg appearance-none cursor-pointer slider"
+                    className="w-full h-3 rounded-lg appearance-none cursor-pointer slider"
                     style={{
-                      background: `linear-gradient(to right, #fecaca 0%, #fef08a 50%, #bbf7d0 100%)`,
+                      background: `linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%)`,
                     }}
                   />
-                  <div className="flex justify-between text-xs text-gray-500 mt-2 px-1">
+                  <div className="flex justify-between text-xs text-neutral-500 mt-2 px-1">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                       <span key={num} className="w-4 text-center">{num}</span>
                     ))}
@@ -510,7 +510,7 @@ export default function AssessmentPage() {
                 </div>
 
                 <div className="mt-4 text-center">
-                  <span className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg text-xl font-bold">
+                  <span className="inline-block px-6 py-3 bg-primary-500 text-white rounded-xl text-xl font-bold shadow-lg shadow-primary-500/30">
                     Selected: {answers[currentQuestion.id] || '—'}
                   </span>
                 </div>
@@ -519,11 +519,11 @@ export default function AssessmentPage() {
           </AnimatePresence>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-10 pt-6 border-t">
+          <div className="flex justify-between mt-10 pt-6 border-t border-neutral-800">
             <button
               onClick={handlePrevious}
               disabled={currentQuestionIndex === 0}
-              className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-6 py-3 text-neutral-300 bg-dark-700 rounded-xl font-medium hover:bg-dark-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               ← Previous
             </button>
@@ -532,7 +532,7 @@ export default function AssessmentPage() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting || Object.keys(answers).length !== questions.length}
-                className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg font-semibold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {isSubmitting ? 'Submitting...' : 'Complete Assessment ✓'}
               </button>
@@ -540,7 +540,7 @@ export default function AssessmentPage() {
               <button
                 onClick={handleNext}
                 disabled={answers[currentQuestion.id] === undefined}
-                className="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-6 py-3 bg-primary-500 text-white rounded-xl font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Next →
               </button>
@@ -553,12 +553,12 @@ export default function AssessmentPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-6 p-6 bg-green-50 border-2 border-green-300 rounded-xl"
+            className="mt-6 p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl"
           >
-            <h3 className="font-bold text-green-900 mb-2 text-lg">
+            <h3 className="font-bold text-emerald-400 mb-2 text-lg">
               ✓ All Questions Answered!
             </h3>
-            <p className="text-green-800">
+            <p className="text-emerald-300/80">
               You've completed all 30 questions. Click "Complete Assessment" to see your personalized risk profile and portfolio recommendations.
             </p>
           </motion.div>
@@ -568,23 +568,23 @@ export default function AssessmentPage() {
       <style jsx>{`
         .slider::-webkit-slider-thumb {
           appearance: none;
-          width: 24px;
-          height: 24px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
-          background: #2563eb;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
           cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+          border: 3px solid #1a1a24;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
 
         .slider::-moz-range-thumb {
-          width: 24px;
-          height: 24px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
-          background: #2563eb;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
           cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+          border: 3px solid #1a1a24;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
       `}</style>
     </div>
