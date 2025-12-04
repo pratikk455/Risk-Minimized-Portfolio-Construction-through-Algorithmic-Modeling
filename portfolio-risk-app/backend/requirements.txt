@@ -37,4 +37,6 @@ python-multipart==0.0.6
 
 # Utilities
 python-magic==0.4.27
-pillow>=10.4.0alpaca-py==0.43.2
+pillow>=10.4.0
+alpaca-py==0.43.2
+google-generativeai>=0.8.0

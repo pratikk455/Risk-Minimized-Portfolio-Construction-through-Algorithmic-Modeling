@@ -93,12 +93,12 @@ export const RegistrationComplete: React.FC<RegistrationCompleteProps> = ({
               initial={{
                 y: -100,
                 x: Math.random() * 400 - 200,
-                rotation: 0,
+                rotate: 0,
                 opacity: 1
               }}
               animate={{
                 y: 600,
-                rotation: 360 * (Math.random() > 0.5 ? 1 : -1),
+                rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
                 opacity: 0
               }}
               transition={{

@@ -9,7 +9,7 @@ class RegistrationStep1(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
     full_name: str = Field(..., min_length=1, max_length=255)
-    phone_number: str = Field(..., min_length=10)
+    phone_number: Optional[str] = Field(None, min_length=10)
     password: str = Field(..., min_length=8)
 
     @validator('username')
@@ -18,8 +18,10 @@ class RegistrationStep1(BaseModel):
             raise ValueError('Username must contain only letters, numbers, and underscores')
         return v.lower()
 
-    @validator('phone_number')
+    @validator('phone_number', pre=True, always=True)
     def validate_phone_number(cls, v):
+        if v is None or v == '':
+            return None
         try:
             # Parse phone number (assume US if no country code)
             parsed = phonenumbers.parse(v, "US")

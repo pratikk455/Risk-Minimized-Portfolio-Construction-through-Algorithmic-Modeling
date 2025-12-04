@@ -141,28 +141,28 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-dark-950 flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full text-center"
         >
-          <div className="bg-white rounded-3xl shadow-xl p-12">
+          <div className="bg-dark-900 rounded-3xl shadow-xl p-12 border border-neutral-800">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring' }}
-              className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6"
+              className="inline-flex items-center justify-center w-20 h-20 bg-emerald-500/20 rounded-full mb-6"
             >
-              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </motion.div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Account Created!</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-bold text-white mb-4">Account Created!</h2>
+            <p className="text-neutral-400 mb-6">
               Your account has been successfully created. Redirecting you to login...
             </p>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto"></div>
           </div>
         </motion.div>
       </div>
@@ -170,7 +170,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-dark-950 flex items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -186,19 +186,19 @@ export default function SignupPage() {
           >
             <UserPlusIcon className="h-8 w-8 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p className="text-gray-600">Join us to start managing your portfolio</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+          <p className="text-neutral-400">Join us to start managing your portfolio</p>
         </div>
 
         {/* Signup Form */}
-        <div className="bg-white rounded-3xl shadow-xl p-8">
+        <div className="bg-dark-900 rounded-3xl shadow-xl p-8 border border-neutral-800">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Error Message */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm"
+                className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm"
               >
                 {error}
               </motion.div>
@@ -206,12 +206,12 @@ export default function SignupPage() {
 
             {/* Username Field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-neutral-300 mb-2">
                 Username *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-gray-400" />
+                  <UserIcon className="h-5 w-5 text-neutral-500" />
                 </div>
                 <input
                   type="text"
@@ -220,7 +220,7 @@ export default function SignupPage() {
                   value={formData.username}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="block w-full pl-10 pr-3 py-2.5 bg-dark-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   placeholder="Choose a username"
                 />
               </div>
@@ -228,7 +228,7 @@ export default function SignupPage() {
 
             {/* Full Name Field */}
             <div>
-              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="full_name" className="block text-sm font-medium text-neutral-300 mb-2">
                 Full Name *
               </label>
               <input
@@ -238,19 +238,19 @@ export default function SignupPage() {
                 value={formData.full_name}
                 onChange={handleChange}
                 required
-                className="block w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                className="block w-full px-3 py-2.5 bg-dark-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                 placeholder="Enter your full name"
               />
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-2">
                 Email Address *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                  <EnvelopeIcon className="h-5 w-5 text-neutral-500" />
                 </div>
                 <input
                   type="email"
@@ -259,7 +259,7 @@ export default function SignupPage() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="block w-full pl-10 pr-3 py-2.5 bg-dark-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   placeholder="your@email.com"
                 />
               </div>
@@ -267,12 +267,12 @@ export default function SignupPage() {
 
             {/* Phone Number Field */}
             <div>
-              <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="phone_number" className="block text-sm font-medium text-neutral-300 mb-2">
                 Phone Number (Optional)
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <PhoneIcon className="h-5 w-5 text-gray-400" />
+                  <PhoneIcon className="h-5 w-5 text-neutral-500" />
                 </div>
                 <input
                   type="tel"
@@ -280,7 +280,7 @@ export default function SignupPage() {
                   name="phone_number"
                   value={formData.phone_number}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="block w-full pl-10 pr-3 py-2.5 bg-dark-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   placeholder="+1234567890"
                 />
               </div>
@@ -288,12 +288,12 @@ export default function SignupPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-300 mb-2">
                 Password *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                  <LockClosedIcon className="h-5 w-5 text-neutral-500" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -302,7 +302,7 @@ export default function SignupPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="block w-full pl-10 pr-12 py-2.5 bg-dark-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   placeholder="At least 8 characters"
                 />
                 <button
@@ -311,9 +311,9 @@ export default function SignupPage() {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeSlashIcon className="h-5 w-5 text-neutral-500 hover:text-neutral-300" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeIcon className="h-5 w-5 text-neutral-500 hover:text-neutral-300" />
                   )}
                 </button>
               </div>
@@ -321,12 +321,12 @@ export default function SignupPage() {
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-300 mb-2">
                 Confirm Password *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                  <LockClosedIcon className="h-5 w-5 text-neutral-500" />
                 </div>
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -335,7 +335,7 @@ export default function SignupPage() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  className="block w-full pl-10 pr-12 py-2.5 bg-dark-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   placeholder="Re-enter your password"
                 />
                 <button
@@ -344,9 +344,9 @@ export default function SignupPage() {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showConfirmPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeSlashIcon className="h-5 w-5 text-neutral-500 hover:text-neutral-300" />
                   ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeIcon className="h-5 w-5 text-neutral-500 hover:text-neutral-300" />
                   )}
                 </button>
               </div>
@@ -358,8 +358,8 @@ export default function SignupPage() {
               disabled={isLoading}
               className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-all ${
                 isLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-primary-600 to-primary-700 hover:shadow-lg'
+                  ? 'bg-neutral-700 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-primary-600 to-primary-700 hover:shadow-lg hover:shadow-primary-500/25'
               }`}
             >
               {isLoading ? (
@@ -377,10 +377,10 @@ export default function SignupPage() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-neutral-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Already have an account?</span>
+                <span className="px-2 bg-dark-900 text-neutral-500">Already have an account?</span>
               </div>
             </div>
           </div>
@@ -389,7 +389,7 @@ export default function SignupPage() {
           <div className="mt-6">
             <Link
               href="/login"
-              className="w-full block text-center py-3 px-4 border-2 border-primary-600 text-primary-600 rounded-xl font-semibold hover:bg-primary-50 transition-all"
+              className="w-full block text-center py-3 px-4 border-2 border-primary-500 text-primary-400 rounded-xl font-semibold hover:bg-primary-500/10 transition-all"
             >
               Sign In
             </Link>
@@ -398,7 +398,7 @@ export default function SignupPage() {
 
         {/* Back to Home */}
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-600 hover:text-primary-600 transition-colors">
+          <Link href="/" className="text-sm text-neutral-500 hover:text-primary-400 transition-colors">
             ← Back to Home
           </Link>
         </div>
