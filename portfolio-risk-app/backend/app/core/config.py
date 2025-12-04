@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
-import secrets
+import os
 import json
 
 class Settings(BaseSettings):
@@ -8,11 +8,12 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
-    # Security
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    # Security - Use environment variable for consistent SECRET_KEY across container restarts
+    # IMPORTANT: Set SECRET_KEY in Cloud Run environment variables for persistence
+    SECRET_KEY: str = os.environ.get("SECRET_KEY", "hedgewise-portfolio-secret-key-2024-secure")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours instead of 30 minutes
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30  # 30 days instead of 7
 
     # Database
     DATABASE_URL: str = "sqlite:///./portfolio_risk.db"

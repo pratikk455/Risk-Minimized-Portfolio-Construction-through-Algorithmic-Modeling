@@ -82,6 +82,14 @@ export default function TradingPage() {
   const [activeTab, setActiveTab] = useState<'execute' | 'positions' | 'orders'>('execute')
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
+  // Sell modal state
+  const [showSellModal, setShowSellModal] = useState(false)
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
+  const [sellAmount, setSellAmount] = useState<string>('')
+  const [sellMode, setSellMode] = useState<'amount' | 'percentage'>('amount')
+  const [reinvestAfterSell, setReinvestAfterSell] = useState(false)
+  const [isSelling, setIsSelling] = useState(false)
+
   // Limit paper trading to $10,000
   const MAX_INVESTMENT = 10000
 
@@ -246,6 +254,122 @@ export default function TradingPage() {
       await fetchTradingStatus()
     } catch (error: any) {
       toast.error(error.response?.data?.detail || `Failed to close ${symbol}`)
+    }
+  }
+
+  // Open sell modal for a position
+  const openSellModal = (position: Position) => {
+    setSelectedPosition(position)
+    setSellAmount('')
+    setSellMode('amount')
+    setReinvestAfterSell(false)
+    setShowSellModal(true)
+  }
+
+  // Calculate sell quantity based on amount or percentage
+  const calculateSellQty = (): number => {
+    if (!selectedPosition) return 0
+    const value = parseFloat(sellAmount) || 0
+
+    if (sellMode === 'percentage') {
+      // Percentage of shares
+      return (value / 100) * selectedPosition.qty
+    } else {
+      // Dollar amount - convert to shares
+      return value / selectedPosition.current_price
+    }
+  }
+
+  // Get the dollar value of what will be sold
+  const getSellValue = (): number => {
+    if (!selectedPosition) return 0
+    const value = parseFloat(sellAmount) || 0
+
+    if (sellMode === 'percentage') {
+      return (value / 100) * selectedPosition.market_value
+    } else {
+      return Math.min(value, selectedPosition.market_value)
+    }
+  }
+
+  // Handle partial sell
+  const handleSellPosition = async () => {
+    if (!selectedPosition) return
+
+    const accessToken = localStorage.getItem('access_token')
+    if (!accessToken) {
+      toast.error('Please login first')
+      return
+    }
+
+    const sellQty = calculateSellQty()
+    const sellValue = getSellValue()
+
+    if (sellQty <= 0 || sellQty > selectedPosition.qty) {
+      toast.error('Invalid sell quantity')
+      return
+    }
+
+    setIsSelling(true)
+
+    try {
+      // If selling entire position
+      if (sellQty >= selectedPosition.qty * 0.99) {
+        await axios.delete(`${API_URL}/api/trading/position/${selectedPosition.symbol}`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        })
+        toast.success(`Sold all ${selectedPosition.symbol}`)
+      } else {
+        // Partial sell - use a sell order
+        await axios.post(
+          `${API_URL}/api/trading/order`,
+          {
+            symbol: selectedPosition.symbol,
+            qty: sellQty,
+            side: 'sell',
+            type: 'market'
+          },
+          { headers: { 'Authorization': `Bearer ${accessToken}` } }
+        )
+        toast.success(`Sold $${sellValue.toFixed(2)} of ${selectedPosition.symbol}`)
+      }
+
+      // Refresh positions and orders
+      await fetchPositions()
+      await fetchOrders()
+      await fetchTradingStatus()
+
+      // If reinvest option is selected, execute portfolio with the sold amount
+      if (reinvestAfterSell && sellValue > 0) {
+        // Wait a moment for the sell to settle
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        try {
+          const response = await axios.post(
+            `${API_URL}/api/trading/execute-portfolio`,
+            { investment_amount: sellValue },
+            { headers: { 'Authorization': `Bearer ${accessToken}` } }
+          )
+
+          if (response.data.success) {
+            toast.success(`Reinvested $${sellValue.toFixed(2)} across portfolio!`)
+            await fetchPositions()
+            await fetchOrders()
+          }
+        } catch (reinvestError: any) {
+          console.error('Error reinvesting:', reinvestError)
+          toast.error('Sell completed but reinvestment failed')
+        }
+      }
+
+      setShowSellModal(false)
+      setSelectedPosition(null)
+      setActiveTab('orders')
+    } catch (error: any) {
+      console.error('Error selling position:', error)
+      toast.error(error.response?.data?.detail || `Failed to sell ${selectedPosition.symbol}`)
+    } finally {
+      setIsSelling(false)
     }
   }
 
@@ -638,12 +762,20 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                             {pos.unrealized_plpc >= 0 ? '+' : ''}{pos.unrealized_plpc.toFixed(2)}%
                           </td>
                           <td className="py-4 px-4 text-center">
-                            <button
-                              onClick={() => handleClosePosition(pos.symbol)}
-                              className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/30 transition-colors"
-                            >
-                              Close
-                            </button>
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => openSellModal(pos)}
+                                className="px-3 py-1.5 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium hover:bg-amber-500/30 transition-colors"
+                              >
+                                Sell
+                              </button>
+                              <button
+                                onClick={() => handleClosePosition(pos.symbol)}
+                                className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/30 transition-colors"
+                              >
+                                Close All
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -803,6 +935,203 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                   className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-emerald-500/20 transition-all"
                 >
                   Execute Orders
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sell Modal */}
+      <AnimatePresence>
+        {showSellModal && selectedPosition && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-overlay flex items-center justify-center p-4"
+            onClick={() => setShowSellModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-dark-900 border border-neutral-800 rounded-2xl shadow-2xl p-6 max-w-lg w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white">Sell {selectedPosition.symbol}</h3>
+                <button
+                  onClick={() => setShowSellModal(false)}
+                  className="text-neutral-400 hover:text-white transition-colors"
+                >
+                  <XCircleIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              {/* Position Info */}
+              <div className="bg-dark-800 rounded-xl p-4 mb-6">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-neutral-400">Current Value</span>
+                    <p className="text-lg font-bold text-white">${selectedPosition.market_value.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div>
+                    <span className="text-neutral-400">Shares Owned</span>
+                    <p className="text-lg font-bold text-white">{selectedPosition.qty.toFixed(4)}</p>
+                  </div>
+                  <div>
+                    <span className="text-neutral-400">Current Price</span>
+                    <p className="text-white">${selectedPosition.current_price.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <span className="text-neutral-400">P/L</span>
+                    <p className={`font-semibold ${selectedPosition.unrealized_pl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {selectedPosition.unrealized_pl >= 0 ? '+' : ''}${selectedPosition.unrealized_pl.toFixed(2)} ({selectedPosition.unrealized_plpc.toFixed(2)}%)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sell Mode Toggle */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => { setSellMode('amount'); setSellAmount(''); }}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    sellMode === 'amount'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-dark-700 text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  Dollar Amount
+                </button>
+                <button
+                  onClick={() => { setSellMode('percentage'); setSellAmount(''); }}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    sellMode === 'percentage'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-dark-700 text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  Percentage
+                </button>
+              </div>
+
+              {/* Sell Amount Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  {sellMode === 'amount' ? 'Amount to Sell ($)' : 'Percentage to Sell (%)'}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={sellAmount}
+                    onChange={(e) => setSellAmount(e.target.value)}
+                    min="0"
+                    max={sellMode === 'percentage' ? 100 : selectedPosition.market_value}
+                    step={sellMode === 'percentage' ? 1 : 0.01}
+                    className="input-large w-full pr-12"
+                    placeholder={sellMode === 'amount' ? '1000' : '50'}
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500">
+                    {sellMode === 'amount' ? '$' : '%'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick Amount Buttons */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {sellMode === 'percentage' ? (
+                  <>
+                    {[25, 50, 75, 100].map((pct) => (
+                      <button
+                        key={pct}
+                        onClick={() => setSellAmount(pct.toString())}
+                        className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-neutral-300 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        {pct}%
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {[100, 500, 1000, 2000].filter(amt => amt <= selectedPosition.market_value).map((amt) => (
+                      <button
+                        key={amt}
+                        onClick={() => setSellAmount(amt.toString())}
+                        className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-neutral-300 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        ${amt}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setSellAmount(selectedPosition.market_value.toFixed(2))}
+                      className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Sell All
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Sale Preview */}
+              {parseFloat(sellAmount) > 0 && (
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-4">
+                  <p className="text-sm text-amber-300">
+                    You will sell approximately <span className="font-bold text-amber-400">{calculateSellQty().toFixed(4)} shares</span> for{' '}
+                    <span className="font-bold text-amber-400">${getSellValue().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Reinvest Option */}
+              <div className="mb-6">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={reinvestAfterSell}
+                    onChange={(e) => setReinvestAfterSell(e.target.checked)}
+                    className="w-5 h-5 rounded border-neutral-600 bg-dark-700 text-primary-500 focus:ring-primary-500"
+                  />
+                  <span className="text-neutral-300">
+                    Reinvest proceeds using portfolio weights
+                  </span>
+                </label>
+                {reinvestAfterSell && parseFloat(sellAmount) > 0 && (
+                  <p className="text-xs text-neutral-500 mt-2 ml-8">
+                    ${getSellValue().toFixed(2)} will be distributed across your portfolio allocations
+                  </p>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSellModal(false)}
+                  className="flex-1 py-3 bg-dark-700 text-neutral-300 rounded-xl font-semibold hover:bg-dark-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSellPosition}
+                  disabled={isSelling || !parseFloat(sellAmount) || getSellValue() <= 0 || getSellValue() > selectedPosition.market_value}
+                  className={`flex-1 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all ${
+                    isSelling || !parseFloat(sellAmount) || getSellValue() <= 0 || getSellValue() > selectedPosition.market_value
+                      ? 'bg-neutral-700 cursor-not-allowed text-neutral-500'
+                      : 'bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:shadow-lg hover:shadow-amber-500/20'
+                  }`}
+                >
+                  {isSelling ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white"></div>
+                      Selling...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowTrendingDownIcon className="h-5 w-5" />
+                      Sell {selectedPosition.symbol}
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
