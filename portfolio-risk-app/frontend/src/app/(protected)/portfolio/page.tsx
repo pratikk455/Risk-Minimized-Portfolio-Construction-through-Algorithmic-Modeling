@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Doughnut } from 'react-chartjs-2'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -156,7 +156,7 @@ const educationalContent: Record<string, { title: string; simple: string; exampl
   }
 }
 
-// Tooltip component with hover explanation
+// Tooltip component with hover explanation - smart positioning to stay within viewport
 const EducationalTooltip = ({
   content,
   children
@@ -165,12 +165,80 @@ const EducationalTooltip = ({
   children: React.ReactNode
 }) => {
   const [isVisible, setIsVisible] = useState(false)
+  const [position, setPosition] = useState<'top' | 'bottom' | 'left' | 'right'>('top')
+  const triggerRef = useRef<HTMLDivElement>(null)
   const info = educationalContent[content]
+
+  const calculatePosition = useCallback(() => {
+    if (!triggerRef.current) return
+
+    const rect = triggerRef.current.getBoundingClientRect()
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const tooltipWidth = 320 // w-80 = 20rem = 320px
+    const tooltipHeight = 200 // approximate height
+
+    // Check available space in each direction
+    const spaceAbove = rect.top
+    const spaceBelow = viewportHeight - rect.bottom
+    const spaceLeft = rect.left
+    const spaceRight = viewportWidth - rect.right
+
+    // Prefer top, but use other positions if not enough space
+    if (spaceAbove >= tooltipHeight + 20) {
+      setPosition('top')
+    } else if (spaceBelow >= tooltipHeight + 20) {
+      setPosition('bottom')
+    } else if (spaceRight >= tooltipWidth + 20) {
+      setPosition('right')
+    } else if (spaceLeft >= tooltipWidth + 20) {
+      setPosition('left')
+    } else {
+      // Default to bottom if nothing else works
+      setPosition('bottom')
+    }
+  }, [])
+
+  const handleMouseEnter = () => {
+    calculatePosition()
+    setIsVisible(true)
+  }
+
+  const getPositionClasses = () => {
+    switch (position) {
+      case 'top':
+        return 'bottom-full left-1/2 transform -translate-x-1/2 mb-2'
+      case 'bottom':
+        return 'top-full left-1/2 transform -translate-x-1/2 mt-2'
+      case 'left':
+        return 'right-full top-1/2 transform -translate-y-1/2 mr-2'
+      case 'right':
+        return 'left-full top-1/2 transform -translate-y-1/2 ml-2'
+      default:
+        return 'bottom-full left-1/2 transform -translate-x-1/2 mb-2'
+    }
+  }
+
+  const getArrowClasses = () => {
+    switch (position) {
+      case 'top':
+        return 'top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-dark-800'
+      case 'bottom':
+        return 'bottom-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-b-dark-800'
+      case 'left':
+        return 'left-full top-1/2 transform -translate-y-1/2 border-8 border-transparent border-l-dark-800'
+      case 'right':
+        return 'right-full top-1/2 transform -translate-y-1/2 border-8 border-transparent border-r-dark-800'
+      default:
+        return 'top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-dark-800'
+    }
+  }
 
   return (
     <div className="relative inline-block">
       <div
-        onMouseEnter={() => setIsVisible(true)}
+        ref={triggerRef}
+        onMouseEnter={handleMouseEnter}
         onMouseLeave={() => setIsVisible(false)}
         className="cursor-help"
       >
@@ -179,11 +247,11 @@ const EducationalTooltip = ({
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-80 pointer-events-none"
+            className={`absolute z-[9999] w-80 max-w-[calc(100vw-2rem)] pointer-events-none ${getPositionClasses()}`}
           >
             <div className="bg-dark-800 border border-neutral-700 text-white rounded-xl p-4 shadow-2xl">
               <div className="flex items-center gap-2 mb-2">
@@ -198,7 +266,7 @@ const EducationalTooltip = ({
                 </div>
               </div>
               {/* Arrow */}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-dark-800"></div>
+              <div className={`absolute ${getArrowClasses()}`}></div>
             </div>
           </motion.div>
         )}
@@ -231,56 +299,47 @@ export default function PortfolioPage() {
         {
           element: '#risk-profile-card',
           title: '🎯 Your Risk Profile',
-          intro: "This is YOUR personal investment style based on your quiz answers. It determines how we balance safety vs. growth potential in your portfolio.",
-          position: 'bottom'
+          intro: "This is YOUR personal investment style based on your quiz answers. It determines how we balance safety vs. growth potential in your portfolio."
         },
         {
           element: '#expected-return-display',
           title: '📈 Expected Annual Return',
-          intro: "This percentage shows how much your investment might grow in a year. Remember: it's an estimate, not a guarantee! Think of it as an educated guess based on historical data.",
-          position: 'left'
+          intro: "This percentage shows how much your investment might grow in a year. Remember: it's an estimate, not a guarantee! Think of it as an educated guess based on historical data."
         },
         {
           element: '#ai-recommendation',
           title: '🤖 AI Insights',
-          intro: "Our AI assistant (powered by Google's Gemini) analyzes your profile and gives you personalized tips. It's like having a friendly financial advisor!",
-          position: 'bottom'
+          intro: "Our AI assistant (powered by Google's Gemini) analyzes your profile and gives you personalized tips. It's like having a friendly financial advisor!"
         },
         {
           element: '#portfolio-chart',
           title: '🍕 Portfolio Pie Chart',
-          intro: "This shows how your money is divided among different investments. Each slice is an ETF - a basket of stocks or bonds you can buy as one package. Bigger slice = more of your money goes there!",
-          position: 'right'
+          intro: "This shows how your money is divided among different investments. Each slice is an ETF - a basket of stocks or bonds you can buy as one package. Bigger slice = more of your money goes there!"
         },
         {
           element: '#asset-breakdown',
           title: '📊 Asset Class Breakdown',
-          intro: "Your investments are split into 3 main types:\n\n🏦 Bonds: Safer, steady returns (like lending money to the government)\n\n📈 Stocks: Higher potential returns but more ups and downs\n\n💎 Alternatives: Things like gold or real estate for extra diversification",
-          position: 'left'
+          intro: "Your investments are split into 3 main types:\n\n🏦 Bonds: Safer, steady returns (like lending money to the government)\n\n📈 Stocks: Higher potential returns but more ups and downs\n\n💎 Alternatives: Things like gold or real estate for extra diversification"
         },
         {
           element: '#sharpe-ratio-display',
           title: '⚖️ The Sharpe Ratio',
-          intro: "This is the 'bang for your buck' score! It measures how much return you get for the risk you take.\n\n• Above 1.0 = Good\n• Above 1.5 = Great\n• Above 2.0 = Excellent\n\nHigher is better!",
-          position: 'top'
+          intro: "This is the 'bang for your buck' score! It measures how much return you get for the risk you take.\n\n• Above 1.0 = Good\n• Above 1.5 = Great\n• Above 2.0 = Excellent\n\nHigher is better!"
         },
         {
           element: '#metrics-cards',
           title: '📋 Key Metrics',
-          intro: "These cards show important numbers about your portfolio. Hover over any metric to learn more! We've added helpful explanations everywhere.",
-          position: 'top'
+          intro: "These cards show important numbers about your portfolio. Hover over any metric to learn more! We've added helpful explanations everywhere."
         },
         {
           element: '#holdings-table',
           title: '📝 Your ETF Holdings',
-          intro: "Here's the detailed list of every ETF in your portfolio. Each row shows:\n\n• Ticker: The short code (like VOO)\n• Name: What the ETF actually is\n• Weight: How much of your money goes here\n• Expected Return & Volatility: Performance predictions\n\nHover over column headers to learn more!",
-          position: 'top'
+          intro: "Here's the detailed list of every ETF in your portfolio. Each row shows:\n\n• Ticker: The short code (like VOO)\n• Name: What the ETF actually is\n• Weight: How much of your money goes here\n• Expected Return & Volatility: Performance predictions\n\nHover over column headers to learn more!"
         },
         {
           element: '#next-steps',
           title: "🚀 What's Next?",
-          intro: "Ready to invest for real? Follow these steps to turn your portfolio from a plan into reality. Remember: this is educational - consider talking to a financial advisor before investing real money!",
-          position: 'top'
+          intro: "Ready to invest for real? Follow these steps to turn your portfolio from a plan into reality. Remember: this is educational - consider talking to a financial advisor before investing real money!"
         },
         {
           title: '🎓 You Did It!',
@@ -299,7 +358,9 @@ export default function PortfolioPage() {
       exitOnOverlayClick: false,
       disableInteraction: false,
       scrollToElement: true,
-      scrollPadding: 100
+      scrollPadding: 150,
+      autoPosition: true,
+      positionPrecedence: ['bottom', 'top', 'right', 'left']
     })
 
     intro.start()
@@ -505,7 +566,7 @@ export default function PortfolioPage() {
       {/* Custom Intro.js styles for dark theme */}
       <style jsx global>{`
         .introjs-tooltip {
-          max-width: 420px !important;
+          max-width: min(420px, calc(100vw - 40px)) !important;
           font-family: inherit !important;
           border-radius: 1rem !important;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
@@ -513,6 +574,21 @@ export default function PortfolioPage() {
           padding: 0 !important;
           overflow: hidden !important;
           background: #1a1a24 !important;
+          /* Prevent going outside viewport */
+          max-height: calc(100vh - 100px) !important;
+          overflow-y: auto !important;
+        }
+        /* Ensure tooltip stays within viewport boundaries */
+        .introjs-tooltipReferenceLayer {
+          max-width: 100vw !important;
+          overflow: visible !important;
+        }
+        .introjs-floating {
+          left: 50% !important;
+          top: 50% !important;
+          transform: translate(-50%, -50%) !important;
+          margin-left: 0 !important;
+          margin-top: 0 !important;
         }
         .introjs-tooltip-header {
           background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%) !important;

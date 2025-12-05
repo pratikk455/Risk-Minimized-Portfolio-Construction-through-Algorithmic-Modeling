@@ -202,15 +202,23 @@ async def get_active_portfolio(
         Assessment.id == portfolio.assessment_id
     ).first()
 
-    # Build allocation list
+    # Build allocation list and calculate category breakdown
     allocations = []
+    category_breakdown = {"bonds": 0.0, "stocks": 0.0, "alternatives": 0.0}
+
     for ticker, weight in sorted(portfolio.allocations.items(), key=lambda x: -x[1]):
         if ticker in ETF_UNIVERSE:
             etf_data = ETF_UNIVERSE[ticker]
+            category = etf_data["category"]
+
+            # Accumulate weight for category breakdown
+            if category in category_breakdown:
+                category_breakdown[category] += weight
+
             allocations.append(ETFAllocation(
                 ticker=ticker,
                 name=etf_data["name"],
-                category=etf_data["category"],
+                category=category,
                 weight=weight,
                 expected_return=round(etf_data["expected_return"] * 100, 2),
                 volatility=round(etf_data["volatility"] * 100, 2),
@@ -226,7 +234,7 @@ async def get_active_portfolio(
             expected_return=round(portfolio.expected_return * 100, 2) if portfolio.expected_return else 0,
             expected_volatility=round(portfolio.expected_volatility * 100, 2) if portfolio.expected_volatility else 0,
             sharpe_ratio=round(portfolio.sharpe_ratio, 2) if portfolio.sharpe_ratio else 0,
-            category_breakdown={}
+            category_breakdown=category_breakdown
         ),
         created_at=portfolio.created_at
     )
