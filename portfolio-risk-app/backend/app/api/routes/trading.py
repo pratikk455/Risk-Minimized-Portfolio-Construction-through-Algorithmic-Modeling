@@ -26,6 +26,11 @@ class ExecutePortfolioRequest(BaseModel):
     portfolio_id: Optional[int] = Field(None, description="Portfolio ID to execute (uses active if not specified)")
 
 
+class SellPortfolioRequest(BaseModel):
+    sell_amount: float = Field(..., gt=0, description="Total dollar amount to sell")
+    portfolio_id: Optional[int] = Field(None, description="Portfolio ID for allocation weights (uses active if not specified)")
+
+
 class PlaceOrderRequest(BaseModel):
     symbol: str = Field(..., description="Stock/ETF symbol")
     qty: Optional[float] = Field(None, gt=0, description="Number of shares")
@@ -58,6 +63,14 @@ class ExecutePortfolioResponse(BaseModel):
     summary: Dict[str, int]
 
 
+class SellPortfolioResponse(BaseModel):
+    success: bool
+    sell_amount: float
+    orders: List[Dict[str, Any]]
+    errors: List[Dict[str, Any]]
+    summary: Dict[str, Any]
+
+
 @router.get("/status")
 async def get_trading_status(
     current_user: User = Depends(get_current_active_user)
@@ -76,6 +89,7 @@ async def get_trading_status(
 
     try:
         account = trader.get_account()
+        market_status = trader.get_market_status()
         return {
             "configured": True,
             "paper_trading": settings.ALPACA_PAPER_TRADING,
@@ -83,6 +97,9 @@ async def get_trading_status(
             "buying_power": account.get("buying_power"),
             "portfolio_value": account.get("portfolio_value"),
             "cash": account.get("cash"),
+            "market_is_open": market_status.get("is_open", False),
+            "market_next_open": market_status.get("next_open"),
+            "market_next_close": market_status.get("next_close"),
         }
     except Exception as e:
         return {
@@ -90,6 +107,24 @@ async def get_trading_status(
             "error": str(e),
             "message": "Error connecting to Alpaca. Check your API keys.",
         }
+
+
+@router.get("/market-status")
+async def get_market_status(
+    current_user: User = Depends(get_current_active_user)
+) -> Dict[str, Any]:
+    """
+    Get current market status including whether market is open
+    """
+    trader = AlpacaTrader()
+
+    if not trader.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Alpaca API keys not configured"
+        )
+
+    return trader.get_market_status()
 
 
 @router.get("/account", response_model=AccountResponse)
@@ -294,6 +329,15 @@ async def execute_portfolio(
             detail="Alpaca API keys not configured. Please add your Alpaca API keys to the .env file."
         )
 
+    # Check if market is open
+    if not trader.is_market_open():
+        market_status = trader.get_market_status()
+        next_open = market_status.get("next_open", "")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Market is currently closed. Trading is only available during market hours (9:30 AM - 4:00 PM ET). Next open: {next_open}"
+        )
+
     # Get the portfolio
     if request.portfolio_id:
         portfolio = db.query(Portfolio).filter(
@@ -353,6 +397,91 @@ async def execute_portfolio(
             errors=result["errors"],
             summary=result["summary"]
         )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
+@router.post("/sell-portfolio", response_model=SellPortfolioResponse)
+async def sell_portfolio(
+    request: SellPortfolioRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+) -> SellPortfolioResponse:
+    """
+    Sell a dollar amount from the portfolio, maintaining target weights.
+
+    This sells proportionally from each position based on target weights,
+    so the remaining portfolio stays balanced according to the allocation.
+    """
+    trader = AlpacaTrader()
+
+    if not trader.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Alpaca API keys not configured. Please add your Alpaca API keys to the .env file."
+        )
+
+    # Check if market is open
+    if not trader.is_market_open():
+        market_status = trader.get_market_status()
+        next_open = market_status.get("next_open", "")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Market is currently closed. Trading is only available during market hours (9:30 AM - 4:00 PM ET). Next open: {next_open}"
+        )
+
+    # Get the portfolio for allocation weights
+    if request.portfolio_id:
+        portfolio = db.query(Portfolio).filter(
+            Portfolio.id == request.portfolio_id,
+            Portfolio.user_id == current_user.id
+        ).first()
+    else:
+        portfolio = db.query(Portfolio).filter(
+            Portfolio.user_id == current_user.id,
+            Portfolio.is_active == True
+        ).first()
+
+    if not portfolio:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No portfolio found. Please generate a portfolio first."
+        )
+
+    # Get allocations from portfolio
+    allocations = portfolio.allocations
+
+    if not allocations:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Portfolio has no allocations"
+        )
+
+    # Execute the sell
+    try:
+        result = trader.sell_and_rebalance(
+            sell_amount=request.sell_amount,
+            allocations=allocations
+        )
+
+        if not result["success"] and "error" in result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=result["error"]
+            )
+
+        return SellPortfolioResponse(
+            success=result["success"],
+            sell_amount=result["sell_amount"],
+            orders=result["orders"],
+            errors=result["errors"],
+            summary=result["summary"]
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

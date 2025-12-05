@@ -34,6 +34,9 @@ interface TradingStatus {
   cash?: number
   message?: string
   error?: string
+  market_is_open?: boolean
+  market_next_open?: string
+  market_next_close?: string
 }
 
 interface Position {
@@ -79,10 +82,15 @@ export default function TradingPage() {
   const [investmentAmount, setInvestmentAmount] = useState<string>('1000')
   const [isExecuting, setIsExecuting] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [activeTab, setActiveTab] = useState<'execute' | 'positions' | 'orders'>('execute')
+  const [activeTab, setActiveTab] = useState<'execute' | 'sell' | 'positions' | 'orders'>('execute')
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
-  // Sell modal state
+  // Sell tab state
+  const [portfolioSellAmount, setPortfolioSellAmount] = useState<string>('')
+  const [isSellingPortfolio, setIsSellingPortfolio] = useState(false)
+  const [showSellConfirmModal, setShowSellConfirmModal] = useState(false)
+
+  // Sell modal state (for individual position)
   const [showSellModal, setShowSellModal] = useState(false)
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
   const [sellAmount, setSellAmount] = useState<string>('')
@@ -222,6 +230,44 @@ export default function TradingPage() {
       toast.error(error.response?.data?.detail || 'Failed to execute portfolio')
     } finally {
       setIsExecuting(false)
+    }
+  }
+
+  // Handle sell portfolio (sells proportionally from all positions based on target weights)
+  const handleSellPortfolio = async () => {
+    setShowSellConfirmModal(false)
+    setIsSellingPortfolio(true)
+
+    const accessToken = localStorage.getItem('access_token')
+    if (!accessToken) {
+      toast.error('Please login first')
+      router.push('/login')
+      return
+    }
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/trading/sell-portfolio`,
+        { sell_amount: parseFloat(portfolioSellAmount) },
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      )
+
+      if (response.data.success) {
+        toast.success(`Successfully sold $${response.data.summary.total_sold?.toFixed(2) || portfolioSellAmount}!`)
+        // Refresh data
+        await fetchPositions()
+        await fetchOrders()
+        await fetchTradingStatus()
+        setActiveTab('orders')
+        setPortfolioSellAmount('')
+      } else {
+        toast.error('Some sell orders failed. Check the orders tab for details.')
+      }
+    } catch (error: any) {
+      console.error('Error selling portfolio:', error)
+      toast.error(error.response?.data?.detail || 'Failed to sell portfolio')
+    } finally {
+      setIsSellingPortfolio(false)
     }
   }
 
@@ -477,12 +523,27 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               <p className="text-neutral-400">Execute your portfolio with virtual money - no real risk!</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-sm text-neutral-400">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              {/* Market Status Indicator */}
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                tradingStatus?.market_is_open
+                  ? 'bg-emerald-500/20 border border-emerald-500/30'
+                  : 'bg-red-500/20 border border-red-500/30'
+              }`}>
+                <span className="relative flex h-2 w-2">
+                  {tradingStatus?.market_is_open ? (
+                    <>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </>
+                  ) : (
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  )}
                 </span>
-                <span className="text-emerald-400">LIVE</span>
+                <span className={`text-sm font-semibold ${tradingStatus?.market_is_open ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {tradingStatus?.market_is_open ? 'Market Open' : 'Market Closed'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-neutral-400">
                 <span className="text-neutral-600">|</span>
                 <span>Updated {lastUpdated.toLocaleTimeString()}</span>
               </div>
@@ -568,19 +629,47 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
           )
         })()}
 
+        {/* Market Closed Banner */}
+        {!tradingStatus?.market_is_open && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <ClockIcon className="h-6 w-6 text-red-400 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-red-400">Market is Currently Closed</h4>
+                <p className="text-sm text-red-300/80">
+                  Trading is only available during market hours: 9:30 AM - 4:00 PM ET, Monday - Friday.
+                  {tradingStatus?.market_next_open && (
+                    <span className="block mt-1">
+                      Next open: {new Date(tradingStatus.market_next_open).toLocaleString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                      })}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 bg-dark-800/50 p-1 rounded-xl w-fit">
-          {['execute', 'positions', 'orders'].map((tab) => (
+        <div className="flex gap-2 mb-6 bg-dark-800/50 p-1 rounded-xl w-fit flex-wrap">
+          {['execute', 'sell', 'positions', 'orders'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
               className={`px-6 py-3 rounded-xl font-semibold transition-all ${
                 activeTab === tab
-                  ? 'bg-primary-500 text-white shadow-lg'
+                  ? tab === 'sell' ? 'bg-amber-500 text-white shadow-lg' : 'bg-primary-500 text-white shadow-lg'
                   : 'text-neutral-400 hover:text-white hover:bg-dark-700'
               }`}
             >
-              {tab === 'execute' && 'Execute Portfolio'}
+              {tab === 'execute' && 'Buy'}
+              {tab === 'sell' && 'Sell'}
               {tab === 'positions' && `Positions (${positions.length})`}
               {tab === 'orders' && `Orders (${orders.length})`}
             </button>
@@ -645,9 +734,9 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
 
                 <button
                   onClick={() => setShowConfirmModal(true)}
-                  disabled={isExecuting || !parseFloat(investmentAmount) || parseFloat(investmentAmount) > availableCash || availableCash <= 0}
+                  disabled={isExecuting || !parseFloat(investmentAmount) || parseFloat(investmentAmount) > availableCash || availableCash <= 0 || !tradingStatus?.market_is_open}
                   className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
-                    isExecuting || !parseFloat(investmentAmount) || parseFloat(investmentAmount) > availableCash || availableCash <= 0
+                    isExecuting || !parseFloat(investmentAmount) || parseFloat(investmentAmount) > availableCash || availableCash <= 0 || !tradingStatus?.market_is_open
                       ? 'bg-neutral-700 cursor-not-allowed text-neutral-500'
                       : 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:shadow-lg hover:shadow-emerald-500/20'
                   }`}
@@ -656,6 +745,11 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white"></div>
                       Executing Orders...
+                    </>
+                  ) : !tradingStatus?.market_is_open ? (
+                    <>
+                      <ClockIcon className="h-5 w-5" />
+                      Market Closed
                     </>
                   ) : (
                     <>
@@ -690,6 +784,162 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                     )
                   })}
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Sell Tab */}
+          {activeTab === 'sell' && (
+            <motion.div
+              key="sell"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="grid lg:grid-cols-2 gap-6"
+            >
+              {/* Sell Amount Card */}
+              <div className="card p-6">
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <ArrowTrendingDownIcon className="h-6 w-6 text-amber-400" />
+                  Sell From Portfolio
+                </h3>
+
+                {positions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <ChartBarIcon className="h-16 w-16 mx-auto mb-4 text-neutral-600" />
+                    <p className="text-neutral-400">No positions to sell</p>
+                    <p className="text-sm mt-2 text-neutral-500">Execute your portfolio first to start trading!</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <div className="bg-dark-800 rounded-xl p-4 mb-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-neutral-400">Portfolio Value</span>
+                          <span className="text-xl font-bold text-white">
+                            ${positions.reduce((sum, pos) => sum + pos.market_value, 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-neutral-300 mb-2">
+                        Amount to Sell ($)
+                      </label>
+                      <input
+                        type="number"
+                        value={portfolioSellAmount}
+                        onChange={(e) => setPortfolioSellAmount(e.target.value)}
+                        min="1"
+                        max={positions.reduce((sum, pos) => sum + pos.market_value, 0)}
+                        className="input-large w-full"
+                        placeholder="Enter amount to sell"
+                      />
+                      <p className="text-sm text-neutral-500 mt-2">
+                        Sells proportionally from each position based on your target allocation weights
+                      </p>
+                    </div>
+
+                    {/* Quick Sell Amount Buttons */}
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {(() => {
+                        const portfolioValue = positions.reduce((sum, pos) => sum + pos.market_value, 0)
+                        return [
+                          { label: '10%', value: portfolioValue * 0.1 },
+                          { label: '25%', value: portfolioValue * 0.25 },
+                          { label: '50%', value: portfolioValue * 0.5 },
+                          { label: '75%', value: portfolioValue * 0.75 },
+                          { label: '100%', value: portfolioValue },
+                        ].map((option) => (
+                          <button
+                            key={option.label}
+                            onClick={() => setPortfolioSellAmount(option.value.toFixed(2))}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              option.label === '100%'
+                                ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-400'
+                                : 'bg-dark-700 hover:bg-dark-600 text-neutral-300'
+                            }`}
+                          >
+                            {option.label} (${option.value.toFixed(0)})
+                          </button>
+                        ))
+                      })()}
+                    </div>
+
+                    <button
+                      onClick={() => setShowSellConfirmModal(true)}
+                      disabled={isSellingPortfolio || !parseFloat(portfolioSellAmount) || parseFloat(portfolioSellAmount) <= 0 || parseFloat(portfolioSellAmount) > positions.reduce((sum, pos) => sum + pos.market_value, 0) || !tradingStatus?.market_is_open}
+                      className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
+                        isSellingPortfolio || !parseFloat(portfolioSellAmount) || parseFloat(portfolioSellAmount) <= 0 || parseFloat(portfolioSellAmount) > positions.reduce((sum, pos) => sum + pos.market_value, 0) || !tradingStatus?.market_is_open
+                          ? 'bg-neutral-700 cursor-not-allowed text-neutral-500'
+                          : 'bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:shadow-lg hover:shadow-amber-500/20'
+                      }`}
+                    >
+                      {isSellingPortfolio ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white"></div>
+                          Selling...
+                        </>
+                      ) : !tradingStatus?.market_is_open ? (
+                        <>
+                          <ClockIcon className="h-5 w-5" />
+                          Market Closed
+                        </>
+                      ) : (
+                        <>
+                          <ArrowTrendingDownIcon className="h-5 w-5" />
+                          Sell Portfolio
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Sell Preview */}
+              <div className="card p-6">
+                <h3 className="text-xl font-bold text-white mb-4">Sell Preview</h3>
+                {positions.length === 0 ? (
+                  <div className="text-center py-8 text-neutral-500">
+                    No positions available
+                  </div>
+                ) : parseFloat(portfolioSellAmount) > 0 ? (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {portfolio.allocations?.map((alloc: PortfolioAllocation) => {
+                      const sellFromPosition = (alloc.weight / 100) * parseFloat(portfolioSellAmount || '0')
+                      const position = positions.find(p => p.symbol === alloc.ticker)
+                      const maxSellable = position?.market_value || 0
+                      const actualSell = Math.min(sellFromPosition, maxSellable)
+
+                      if (!position || actualSell < 1) return null
+
+                      return (
+                        <div
+                          key={alloc.ticker}
+                          className="flex items-center justify-between p-3 bg-dark-800/50 rounded-xl"
+                        >
+                          <div>
+                            <span className="font-bold text-amber-400">{alloc.ticker}</span>
+                            <span className="text-neutral-500 text-sm ml-2">{alloc.weight.toFixed(1)}%</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-semibold text-white">
+                              -${actualSell.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <p className="text-xs text-neutral-500">
+                              of ${maxSellable.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-neutral-500">
+                    Enter an amount to see sell preview
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -935,6 +1185,70 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                   className="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-emerald-500/20 transition-all"
                 >
                   Execute Orders
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sell Portfolio Confirmation Modal */}
+      <AnimatePresence>
+        {showSellConfirmModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-overlay flex items-center justify-center p-4"
+            onClick={() => setShowSellConfirmModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-dark-900 border border-neutral-800 rounded-2xl shadow-2xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-xl font-bold text-white mb-4">Confirm Portfolio Sell</h3>
+              <p className="text-neutral-400 mb-4">
+                You are about to sell <span className="font-bold text-amber-400">${parseFloat(portfolioSellAmount).toLocaleString()}</span> from your portfolio.
+              </p>
+              <div className="bg-dark-800 rounded-xl p-4 mb-6">
+                <p className="text-sm text-neutral-400 mb-2">This will sell proportionally from each position:</p>
+                <ul className="text-sm text-neutral-300 space-y-1">
+                  {portfolio.allocations?.slice(0, 5).map((alloc: PortfolioAllocation) => {
+                    const sellFromPosition = (alloc.weight / 100) * parseFloat(portfolioSellAmount || '0')
+                    const position = positions.find(p => p.symbol === alloc.ticker)
+                    if (!position || sellFromPosition < 1) return null
+                    const actualSell = Math.min(sellFromPosition, position.market_value)
+                    return (
+                      <li key={alloc.ticker}>
+                        • <span className="font-semibold text-amber-400">{alloc.ticker}</span>: -${actualSell.toFixed(2)}
+                      </li>
+                    )
+                  })}
+                  {(portfolio.allocations?.length || 0) > 5 && (
+                    <li className="text-neutral-500">...and more</li>
+                  )}
+                </ul>
+              </div>
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 mb-6">
+                <p className="text-sm text-amber-300">
+                  The remaining portfolio will maintain your target allocation weights.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSellConfirmModal(false)}
+                  className="flex-1 py-3 bg-dark-700 text-neutral-300 rounded-xl font-semibold hover:bg-dark-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSellPortfolio}
+                  className="flex-1 py-3 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-amber-500/20 transition-all"
+                >
+                  Confirm Sell
                 </button>
               </div>
             </motion.div>

@@ -58,6 +58,33 @@ class AlpacaTrader:
         """Check if Alpaca is properly configured"""
         return self.trading_client is not None
 
+    def get_market_status(self) -> Dict[str, Any]:
+        """
+        Get current market status including whether market is open.
+
+        Returns:
+            Dict with is_open, next_open, next_close times
+        """
+        if not self.is_configured():
+            return {"is_open": False, "error": "Alpaca not configured"}
+
+        try:
+            clock = self.trading_client.get_clock()
+            return {
+                "is_open": clock.is_open,
+                "next_open": clock.next_open.isoformat() if clock.next_open else None,
+                "next_close": clock.next_close.isoformat() if clock.next_close else None,
+                "timestamp": clock.timestamp.isoformat() if clock.timestamp else None,
+            }
+        except Exception as e:
+            logger.error(f"Error getting market status: {e}")
+            return {"is_open": False, "error": str(e)}
+
+    def is_market_open(self) -> bool:
+        """Check if the market is currently open for trading"""
+        status = self.get_market_status()
+        return status.get("is_open", False)
+
     def get_account(self) -> Optional[Dict[str, Any]]:
         """Get account information including buying power and portfolio value"""
         if not self.is_configured():
@@ -395,6 +422,106 @@ class AlpacaTrader:
         except Exception as e:
             logger.error(f"Error closing all positions: {e}")
             return {"success": False, "error": str(e)}
+
+    def sell_and_rebalance(
+        self,
+        sell_amount: float,
+        allocations: Dict[str, float]
+    ) -> Dict[str, Any]:
+        """
+        Sell a dollar amount from the portfolio, maintaining target weights.
+
+        This sells proportionally from each position based on target weights,
+        so the remaining portfolio stays balanced.
+
+        Args:
+            sell_amount: Total dollar amount to sell
+            allocations: Target allocations {symbol: weight_percentage}
+
+        Returns:
+            Summary of sell orders placed
+        """
+        if not self.is_configured():
+            return {"success": False, "error": "Alpaca not configured"}
+
+        # Get current positions
+        positions = self.get_positions()
+        if not positions:
+            return {"success": False, "error": "No positions to sell"}
+
+        # Calculate total portfolio value
+        total_value = sum(pos["market_value"] for pos in positions)
+
+        if sell_amount > total_value:
+            return {
+                "success": False,
+                "error": f"Sell amount (${sell_amount:.2f}) exceeds portfolio value (${total_value:.2f})"
+            }
+
+        # Create a map of current positions
+        position_map = {pos["symbol"]: pos for pos in positions}
+
+        results = {
+            "success": True,
+            "sell_amount": sell_amount,
+            "orders": [],
+            "errors": [],
+            "summary": {
+                "total_orders": 0,
+                "successful_orders": 0,
+                "failed_orders": 0,
+                "total_sold": 0,
+            }
+        }
+
+        # Sell from each position proportionally based on target weights
+        for symbol, weight in allocations.items():
+            if weight <= 0:
+                continue
+
+            # Only sell from positions we actually hold
+            if symbol not in position_map:
+                continue
+
+            position = position_map[symbol]
+
+            # Calculate how much to sell from this position based on weight
+            sell_from_position = (weight / 100) * sell_amount
+
+            # Make sure we don't sell more than we have
+            max_sellable = position["market_value"]
+            actual_sell = min(sell_from_position, max_sellable)
+
+            # Skip very small orders
+            if actual_sell < 1:
+                continue
+
+            results["summary"]["total_orders"] += 1
+
+            try:
+                order = self.place_market_order(
+                    symbol=symbol,
+                    notional=round(actual_sell, 2),
+                    side="sell"
+                )
+
+                if order:
+                    order["sell_amount"] = round(actual_sell, 2)
+                    order["weight"] = weight
+                    results["orders"].append(order)
+                    results["summary"]["successful_orders"] += 1
+                    results["summary"]["total_sold"] += actual_sell
+            except Exception as e:
+                results["errors"].append({
+                    "symbol": symbol,
+                    "error": str(e)
+                })
+                results["summary"]["failed_orders"] += 1
+
+        if results["summary"]["failed_orders"] > 0:
+            results["success"] = results["summary"]["successful_orders"] > 0
+
+        return results
 
 
 # Singleton instance
