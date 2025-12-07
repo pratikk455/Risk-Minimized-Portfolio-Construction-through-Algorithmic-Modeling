@@ -12,9 +12,8 @@ RUN npm ci
 # Copy source files
 COPY . .
 
-# Build argument for API URL
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Build argument for API URL - hardcoded for Cloud Run deployment
+ENV NEXT_PUBLIC_API_URL=https://portfolio-risk-backend-573269025877.us-central1.run.app
 
 # Build the application
 RUN npm run build
