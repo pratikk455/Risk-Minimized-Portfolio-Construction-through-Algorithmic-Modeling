@@ -60,4 +60,4 @@ postgres_data/
 # Misc
 .cache/
 tmp/
-temp/
+temp/*.zip
