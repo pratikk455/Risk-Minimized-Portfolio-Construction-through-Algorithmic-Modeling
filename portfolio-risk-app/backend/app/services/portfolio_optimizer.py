@@ -782,7 +782,8 @@ class PortfolioOptimizer:
             # Dynamic blend based on risk score:
             # - Conservative (low score): More HRP for safety
             # - Aggressive (high score): More Markowitz for returns
-            hrp_weight = max(0.1, 0.6 - (risk_score * 0.06))
+            # α₀ = 0.4 determined via grid search on 2017-2018 validation data
+            hrp_weight = max(0.1, 0.4 - (risk_score * 0.04))
             mkw_weight = 1.0 - hrp_weight
 
             all_tickers = set(hrp_weights.keys()) | set(markowitz_weights.keys())

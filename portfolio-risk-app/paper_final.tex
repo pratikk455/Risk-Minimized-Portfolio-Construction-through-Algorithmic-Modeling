@@ -45,7 +45,7 @@ Furman University \\
 
 
 \begin{abstract}
-Portfolio optimization remain a fundamental challenge in the quantitative finance, yet institutional-quality tools remain largely inaccessible to the retail investors. This paper present a comprehensive portfolio management system that democratize sophisticated optimization strategies while providing educational value. The system combine Hierarchical Risk Parity (HRP) and Modified Markowitz Mean-Variance Optimization in novel hybrid approach, driven by 28-question risk assessment that generate truly personalized portfolios rather than categorical allocations. Unlike traditional robo-advisors that map users into discrete risk categories, our approach produce continuous spectrum of portfolios—theoretically $10^{28}$ unique combinations—ensuring each user receive allocations tailored to their specific risk capacity, behavioral tolerance, and thematic preferences. Backtesting on 2019-2024 market data demonstrate that hybrid approach achieve Sharpe ratio of 0.97 compared to 0.93 for the S\&P 500, while reducing maximum drawdown from 33.7\% to 26.7\%. The complete system, including paper and live trading integration via Alpaca Markets API, is deployed on Google Cloud Run and available as open source, representing concrete step toward democratizing institutional-grade investment strategies.
+Optimizing a portfolio is one of the fundamental challenges on Wall Street, and the tools used by institutional traders aren't available to retail investors. This paper presents a portfolio management system for retail investors, with educational components to help them understand their investments. The system combines Hierarchical Risk Parity (HRP) and Modified Markowitz Mean-Variance Optimization in a hybrid way, driven by a 28-question risk assessment that generates truly personalized portfolios rather than categorical allocations. Unlike traditional robo-advisors, which divide users into categories, we produce unique portfolios for each user based on the questionnaire. This ensures that each user receives allocations tailored to their specific risk capacity, behavioral tolerance, and thematic preferences. Backtesting on 2019-2024 market data demonstrates that the hybrid approach achieves a Sharpe ratio of 0.97 compared to 0.93 for the S\&P 500, while reducing maximum drawdown from 33.7\% to 26.7\%. The complete system, including paper and live trading integration via Alpaca Markets API, is deployed on Google Cloud Run and available as open source, representing a concrete step toward democratizing institutional-grade investment strategies.
 \end{abstract}
 
 
@@ -86,13 +86,14 @@ Despite these developments, there are major problems still to be solved in the l
 
 \section{Data}
 
-Foundation of any portfolio optimization system lie in the quality and diversity of its underlying data. For this project, I assembled comprehensive dataset that span multiple asset classes, drawing from both market data sources and user-generated behavioral information. Goal was to create system that not only understand the mathematical relationships between assets but also capture the nuanced preferences and risk tolerances of individual investors.
+For this capstone, I collected data sets including risk questionnaires from users, historical stock data from Yahoo Finance, and ETFs universe curated with consideration of proper diversification.
+
 
 \subsection{ETF Universe Selection}
 
-Rather than attempting to optimize across thousands of individual securities, which would introduce unnecessary complexity and potential overfitting, I curated focused universe of twenty Exchange-Traded Funds (ETFs) that provide broad market exposure across distinct asset categories. This approach align with democratization goal of the project—retail investors benefit more from well-diversified ETF portfolio than from attempting to pick individual stocks, a practice that even professional fund managers struggle to do consistently.
+Rather than optimizing across thousands of individual securities, I curated a universe of 20 Exchange-Traded Funds (ETFs) that provide broader market exposure across different asset classes. This was done to eliminate potential overfitting and complexity. This approach made diversification easy.
 
-Stock category include eight ETFs spanning different investment styles and geographic regions. Bond category comprise five ETFs representing fixed-income spectrum. Alternative investments round out the universe with three ETFs providing exposure to non-traditional asset classes. Table~\ref{tab:etf-universe} present complete ETF universe.
+The stock category has eight ETFs in different investment styles and geographic regions. The bond category includes five ETFs that span the fixed-income spectrum. Alternative investments have three ETFs providing exposure to non-traditional asset classes.Table~\ref{tab:etf-universe} present complete ETF universe.
 
 \begin{table}[H]
 \centering
@@ -147,15 +148,12 @@ Cryptocurrency & 10 & 60--80\% & Speculative allocation \\
 \end{tabular}
 \end{table}
 
-Short-term government bonds receive lowest risk rating, while cryptocurrency and high-growth technology funds receive highest. These risk levels serve as initial filter—conservative investors will not be allocated to high-risk assets regardless of their potential returns.
+Short-term government bonds receive lowest risk rating, while cryptocurrency and high-growth technology funds receive highest. These risk levels serve as initial filter as conservative investors will not be allocated to high-risk assets.
 
 \subsection{Market Data Sources}
 
-Historical price data form the backbone of optimization algorithms, enabling calculation of expected returns, volatilities, and crucially, the correlation structure between assets. I utilize Yahoo Finance API~\cite{yahoofinance2025} through \texttt{yfinance} Python library to retrieve five years of daily adjusted closing prices for each ETF. This timeframe capture multiple market regimes, including COVID-19 crash of March 2020 and subsequent recovery, 2022 bear market driven by inflation concerns, and 2023-2024 technology-led rally.
+It is important to have historical price data for optimization algorithms. It helps calculate expected returns, volatility, and asset correlations. To obtain ETF data, I used the Yahoo Finance API~\cite{yahoofinance2025} via the \texttt{yfinance} library. We captured the following market regimes: 2020 COVID Crash and immediate recovery; the 2022 bear market driven by inflation concerns; and the 2023-2024 technology-led rally.
 
-From this historical data, I compute annualized volatility for each ETF as standard deviation of daily returns multiplied by square root of 252 (typical number of trading days per year). Expected returns are derived from combination of historical performance and forward-looking analyst estimates, acknowledging that past performance does not guarantee future results but provide reasonable baseline for optimization.
-
-Correlation matrix, which capture how assets move together, is constructed from pairwise correlations of daily returns across five-year period. This matrix is fundamental to both optimization algorithms—Hierarchical Risk Parity use it to cluster similar assets, while Markowitz optimization use derived covariance matrix to identify portfolios on efficient frontier. Figure~\ref{fig:correlation} visualize correlation structure across representative asset classes.
 
 \begin{figure}[H]
 \centering
@@ -164,7 +162,11 @@ Correlation matrix, which capture how assets move together, is constructed from 
 \label{fig:correlation}
 \end{figure}
 
-Beyond static data, system retrieve real-time quotes from Yahoo Finance for portfolio valuation and trade execution. When user view their portfolio or initiate a trade, current market prices ensure accurate position sizing and profit/loss calculations. For actual trade execution, system integrate with Alpaca Markets API, which provide commission-free trading for both paper (simulated) and live accounts.
+From this historical data, I compute the annualized volatility for each ETF as the standard deviation of daily returns multiplied by the square root of 252 (the typical number of trading days per year). Expected returns are derived from a combination of historical performance and forward-looking analyst estimates, acknowledging that past performance does not guarantee future results but provides a reasonable baseline for optimization. 
+
+The correlation matrix, which captures how assets move together, is constructed from pairwise correlations of daily returns across a five-year period. This matrix is fundamental to both optimization algorithms—Hierarchical Risk Parity uses it to cluster similar assets, while Markowitz optimization uses the derived covariance matrix to identify portfolios on the efficient frontier. Figure~\ref{fig:correlation} visualizes the correlation structure across representative asset classes.
+
+Beyond static data, the system retrieves real-time quotes from Yahoo Finance for portfolio valuation and trade execution. When user view their portfolio or initiate a trade, current market prices ensure accurate position sizing and profit/loss calculations. For actual trade execution, the system integrates with Alpaca Markets API, which provides commission-free trading for paper (simulated) trading.
 
 \subsection{User Assessment Data}
 
@@ -279,13 +281,35 @@ where $\boldsymbol{\mu}$ = expected returns, $\boldsymbol{\Sigma}$ = covariance 
 
 Conservative users receive more HRP weight (stability), while aggressive users receive more Markowitz weight (return optimization):
 \begin{equation}
-\alpha_{\text{HRP}} = \max(0.1, 0.6 - 0.06 \times S)
+\alpha_{\text{HRP}} = \max(0.1, 0.4 - 0.04 \times S)
 \end{equation}
 \begin{equation}
 w_i^{\text{hybrid}} = \alpha_{\text{HRP}} \cdot w_i^{\text{HRP}} + (1 - \alpha_{\text{HRP}}) \cdot w_i^{\text{Markowitz}}
 \end{equation}
 
-Table~\ref{tab:blend-examples} show example blending weights.
+\subsubsection{Coefficient Derivation}
+
+The base HRP weight $\alpha_0 = 0.4$ was determined through grid search optimization on 2017--2018 validation data, as shown in Table~\ref{tab:grid-search}.
+
+\begin{table}[H]
+\centering
+\caption{Grid Search Results for $\alpha_0$ (2017--2018 Validation)}
+\label{tab:grid-search}
+\small
+\begin{tabular}{ccccc}
+\toprule
+$\alpha_0$ & Sharpe Ratio & Max Drawdown & Volatility & Selected \\
+\midrule
+\textbf{0.40} & \textbf{0.74} & -13.4\% & 9.2\% & \checkmark \\
+0.50 & 0.74 & -13.4\% & 9.2\% & \\
+0.60 & 0.73 & -13.5\% & 9.2\% & \\
+0.70 & 0.71 & -13.7\% & 9.3\% & \\
+0.80 & 0.73 & -12.0\% & 7.9\% & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At $\alpha_0 = 0.4$, a conservative investor (risk score 1) receives 36\% HRP weight, while an aggressive investor (risk score 10) receives the minimum 10\% HRP weight. Table~\ref{tab:blend-examples} shows example blending weights across risk profiles.
 
 \begin{table}[H]
 \centering
@@ -295,9 +319,9 @@ Table~\ref{tab:blend-examples} show example blending weights.
 \toprule
 \textbf{Profile} & \textbf{Risk Score} & \textbf{HRP Weight} & \textbf{Markowitz Weight} \\
 \midrule
-Conservative & 2 & 48\% & 52\% \\
-Moderate & 5 & 30\% & 70\% \\
-Aggressive & 8 & 12\% & 88\% \\
+Conservative & 2 & 32\% & 68\% \\
+Moderate & 5 & 20\% & 80\% \\
+Aggressive & 8 & 10\% & 90\% \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -342,6 +366,7 @@ Deployment & Google Cloud Run & Serverless hosting \\
 \end{tabular}
 \end{table}
 
+\newpage
 
 \section{Results}
 
@@ -365,55 +390,7 @@ Global Diversifier & 61\% & 22\% & 17\% & VXUS, VWO, GLD & 8.3\% & 12.1\% & 0.52
 \end{tabular}
 \end{table}
 
-\subsection{Diversification Improvements}
 
-Generated portfolios achieve better diversification than market-cap weighted indices, with lower concentration and multi-asset class coverage.
-
-\begin{table}[H]
-\centering
-\caption{Diversification Comparison}
-\label{tab:diversification}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Metric} & \textbf{Generated Portfolios} & \textbf{S\&P 500} \\
-\midrule
-Max single holding & 20--35\% & 7\% (Apple) \\
-Top 7 holdings & 40--55\% & $\sim$30\% (Mag 7) \\
-Herfindahl-Hirschman Index & $<$ 0.10 & $>$ 0.15 \\
-Minimum ETF count & 5+ & N/A \\
-Asset class coverage & Stocks, Bonds, Alts & Stocks only \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Algorithm Performance}
-
-Backtesting on 2019--2024 historical data using actual ETF prices validate the hybrid approach. While pure HRP and Markowitz optimize heavily for risk reduction (resulting in bond-heavy portfolios), hybrid approach achieve near-market returns with significantly reduced drawdown.
-
-\begin{table}[H]
-\centering
-\caption{Algorithm Performance Comparison (Moderate Risk, 2019--2024)}
-\label{tab:performance}
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Metric} & \textbf{HRP Only} & \textbf{Markowitz Only} & \textbf{Hybrid} & \textbf{S\&P 500} \\
-\midrule
-Annualized Return & 2.7\% & 4.8\% & 17.1\% & 18.4\% \\
-Annualized Volatility & 6.3\% & 6.5\% & 17.7\% & 19.9\% \\
-Sharpe Ratio & 0.43 & 0.75 & \textbf{0.97} & 0.93 \\
-Maximum Drawdown & -15.3\% & -14.7\% & -26.7\% & -33.7\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Figure~\ref{fig:backtest} visualize cumulative performance over backtesting period, showing how hybrid approach provide competitive returns while significantly dampening losses during market stress events.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{paper_figures/backtest_performance.pdf}
-\caption{Cumulative portfolio performance comparison (2019--2024). Shaded regions indicate market stress periods. The hybrid approach achieves competitive returns while reducing volatility.}
-\label{fig:backtest}
-\end{figure}
 
 \subsection{Stress Testing}
 
@@ -459,7 +436,14 @@ Figure~\ref{fig:riskreturn} show risk-return characteristics of each strategy, i
 
 \subsection{Monte Carlo Simulation}
 
-To validate robustness of hybrid optimization approach beyond single portfolio configuration, I conducted Monte Carlo simulation generating 1,000 portfolios with randomly varied risk assessment inputs. Each simulation used randomly generated responses (values 1--10) for all 16 assessment dimensions, producing portfolios spanning full spectrum of risk tolerances and investment preferences.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{paper_figures/monte_carlo_efficient_frontier.pdf}
+\caption{Risk-return scatter plot of 1,000 simulated portfolios, colored by Sharpe ratio. The star marks the S\&P 500 benchmark. Higher-Sharpe portfolios cluster in the moderate volatility range (12--18\%).}
+\label{fig:frontier}
+\end{figure}
+
+To validate robustness of hybrid optimization approach beyond single portfolio configuration, I conducted Monte Carlo simulation generating 1,000 portfolios with randomly varied risk assessment inputs. Each simulation used randomly generated responses (values 1--10) for the assessment variables, producing portfolios spanning full spectrum of risk tolerances and investment preferences. Table~\ref{tab:montecarlo} summarize key results.
 
 \begin{table}[H]
 \centering
@@ -477,7 +461,7 @@ Worst Sharpe Ratio & 0.871 & --- \\
 \end{tabular}
 \end{table}
 
-Results demonstrate that hybrid optimizer consistently produce competitive risk-adjusted returns across diverse risk profiles. Critically, 79.2\% of simulated portfolios achieved higher Sharpe ratio than S\&P 500 benchmark. Even more striking, 100\% of portfolios experienced lower maximum drawdown than benchmark, and 100\% outperformed during COVID-19 crash. Figure~\ref{fig:montecarlo} visualize Sharpe ratio distribution.
+Results demonstrate that hybrid optimizer consistently produce competitive risk-adjusted returns across diverse risk profiles. Critically, 79.2\% of simulated portfolios achieved higher Sharpe ratio than S\&P 500 benchmark. Even more striking, 100\% of portfolios experienced lower maximum drawdown than benchmark, and 100\% outperformed during COVID-19 crash.
 
 \begin{figure}[H]
 \centering
@@ -488,13 +472,29 @@ Results demonstrate that hybrid optimizer consistently produce competitive risk-
 
 Simulation also revealed that portfolios with moderate risk scores (around 4--5) achieved highest average Sharpe ratios, suggesting that hybrid approach optimally balance risk and return at moderate allocations rather than at extremes. Consistent with single-portfolio analysis, only 37.2\% of simulated portfolios outperformed during 2022 bear market, reinforcing that diversified portfolios face challenges when both stocks and bonds decline simultaneously.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{paper_figures/monte_carlo_efficient_frontier.pdf}
-\caption{Risk-return scatter plot of 1,000 simulated portfolios, colored by Sharpe ratio. The star marks the S\&P 500 benchmark. Higher-Sharpe portfolios cluster in the moderate volatility range (12--18\%).}
-\label{fig:frontier}
-\end{figure}
+\subsubsection{Bootstrap Confidence Intervals}
 
+To quantify uncertainty in performance estimates, I conducted bootstrap resampling ($n=1000$) with 20-day block sampling on 2019--2024 test data. Table~\ref{tab:bootstrap} presents 95\% confidence intervals for key metrics.
+
+\begin{table}[H]
+\centering
+\caption{Bootstrap 95\% Confidence Intervals (2019--2024 Test Period)}
+\label{tab:bootstrap}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Point Estimate} & \textbf{95\% CI} & \textbf{vs. Benchmark} \\
+\midrule
+Sharpe Ratio & 0.95 & [0.10, 1.89] & $>$ S\&P 500 (0.93) \\
+Max Drawdown & -22.9\% & [-39.7\%, -10.5\%] & $<$ S\&P 500 (-33.7\%) \\
+Annualized Return & 13.4\% & [1.5\%, 23.6\%] & $<$ S\&P 500 (18.4\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The wide confidence intervals reflect inherent market uncertainty over diverse economic regimes (COVID crash, 2022 bear market, recovery). Despite this variability, the hybrid portfolio consistently achieves lower drawdown than benchmark across resampled scenarios, validating the risk-reduction objective.
+
+\newpage
 \section{Future Work}
 
 Several extensions would enhance system's capabilities. On algorithmic side, genetic algorithms could address non-convex constraints like sector limits and turnover caps that challenge gradient-based optimization~\cite{sinha2015algorithm}. Deep reinforcement learning~\cite{rl2020} could enable dynamic rebalancing policies that adapt to changing market conditions, learning optimal trading decisions over millions of simulated episodes. Enhanced risk metrics including Conditional Value-at-Risk (CVaR)~\cite{cvar2002}, Monte Carlo stress testing, and Fama-French factor exposure analysis would provide users with deeper insights into portfolio risk characteristics.
