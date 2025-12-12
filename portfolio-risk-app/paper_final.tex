@@ -45,7 +45,7 @@ Furman University \\
 
 
 \begin{abstract}
-Optimizing a portfolio is one of the fundamental challenges on Wall Street, and the tools used by institutional traders aren't available to retail investors. This paper presents a portfolio management system for retail investors, with educational components to help them understand their investments. The system combines Hierarchical Risk Parity (HRP) and Modified Markowitz Mean-Variance Optimization in a hybrid way, driven by a 28-question risk assessment that generates truly personalized portfolios rather than categorical allocations. Unlike traditional robo-advisors, which divide users into categories, we produce unique portfolios for each user based on the questionnaire. This ensures that each user receives allocations tailored to their specific risk capacity, behavioral tolerance, and thematic preferences. Backtesting on 2019-2024 market data demonstrates that the hybrid approach achieves a Sharpe ratio of 0.97 compared to 0.93 for the S\&P 500, while reducing maximum drawdown from 33.7\% to 26.7\%. The complete system, including paper and live trading integration via Alpaca Markets API, is deployed on Google Cloud Run and available as open source, representing a concrete step toward democratizing institutional-grade investment strategies.
+Optimizing a portfolio is one of the fundamental challenges on Wall Street, and the tools used by institutional traders aren't available to retail investors. This paper presents a portfolio management system for retail investors, with educational components to help them understand their investments. The system combines Hierarchical Risk Parity (HRP) and Modified Markowitz Mean-Variance Optimization in a hybrid way, driven by a 28-question risk assessment that generates truly personalized portfolios rather than categorical allocations. Unlike traditional robo-advisors, which divide users into categories, we produce unique portfolios for each user based on the questionnaire. This ensures that each user receives allocations tailored to their specific risk capacity, behavioral tolerance, and thematic preferences. Backtesting on 2019-2024 market data demonstrates that the hybrid approach achieves a Sharpe ratio of 0.97 compared to 0.93 for the S\&P 500, while reducing maximum drawdown from 33.7\% to 26.5\%. The complete system, including paper and live trading integration via Alpaca Markets API, is deployed on Google Cloud Run and available as open source, representing a concrete step toward democratizing institutional-grade investment strategies.
 \end{abstract}
 
 
@@ -309,7 +309,7 @@ $\alpha_0$ & Sharpe Ratio & Max Drawdown & Volatility & Selected \\
 \end{tabular}
 \end{table}
 
-At $\alpha_0 = 0.4$, a conservative investor (risk score 1) receives 36\% HRP weight, while an aggressive investor (risk score 10) receives the minimum 10\% HRP weight. Table~\ref{tab:blend-examples} shows example blending weights across risk profiles.
+The Sharpe ratios across $\alpha_0$ values are similar (0.71--0.74), indicating the system is robust to coefficient choice. We select $\alpha_0 = 0.4$ as it achieves the highest Sharpe with moderate volatility. At this value, a conservative investor (risk score 1) receives 36\% HRP weight, while an aggressive investor (risk score 10) receives the minimum 10\% HRP weight. Table~\ref{tab:blend-examples} shows example blending weights across risk profiles.
 
 \begin{table}[H]
 \centering
@@ -405,12 +405,12 @@ Portfolio resilience was evaluated across historical and simulated stress scenar
 
 Notably, 2022 bear market presented unique challenge for diversified portfolios. Unlike typical downturns where bonds provide hedge against equity losses, 2022 saw Federal Reserve's aggressive interest rate hikes cause simultaneous declines in both stocks and bonds---a rare ``everything crash'' that broke traditional stock-bond negative correlation. Nasdaq-100 (QQQ) fell 33\%, while long-term Treasury bonds (TLT) dropped 31\%. This explain why hybrid portfolio, with its allocations to both tech-heavy equities and bonds, did not outperform S\&P 500 during this specific period.
 
-However, this limitation highlight important insight: no strategy outperform in every market regime. Hybrid approach's value lie in its superior \textit{risk-adjusted} performance across full market cycle, achieving higher Sharpe ratio (0.97 vs.\ 0.93) and significantly lower maximum drawdown (-26.7\% vs.\ -33.7\%) than benchmark over complete 2019--2024 period. Figure~\ref{fig:drawdown} show drawdown profile over time, illustrating how diversified portfolios recover faster from market shocks.
+However, this limitation highlight important insight: no strategy outperform in every market regime. Hybrid approach's value lie in its superior \textit{risk-adjusted} performance across full market cycle, achieving higher Sharpe ratio (0.97 vs.\ 0.93) and significantly lower maximum drawdown (-26.5\% vs.\ -33.7\%) than benchmark over complete 2019--2024 period. Figure~\ref{fig:drawdown} show drawdown profile over time, illustrating how diversified portfolios recover faster from market shocks.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{paper_figures/drawdown_comparison.pdf}
-\caption{Maximum drawdown comparison over the backtesting period. The hybrid portfolio's maximum drawdown of -26.7\% compares favorably to the S\&P 500's -33.7\% during COVID.}
+\caption{Maximum drawdown comparison over the backtesting period. The hybrid portfolio's maximum drawdown of -26.5\% compares favorably to the S\&P 500's -33.7\% during COVID.}
 \label{fig:drawdown}
 \end{figure}
 
@@ -485,14 +485,14 @@ To quantify uncertainty in performance estimates, I conducted bootstrap resampli
 \toprule
 \textbf{Metric} & \textbf{Point Estimate} & \textbf{95\% CI} & \textbf{vs. Benchmark} \\
 \midrule
-Sharpe Ratio & 0.95 & [0.10, 1.89] & $>$ S\&P 500 (0.93) \\
-Max Drawdown & -22.9\% & [-39.7\%, -10.5\%] & $<$ S\&P 500 (-33.7\%) \\
-Annualized Return & 13.4\% & [1.5\%, 23.6\%] & $<$ S\&P 500 (18.4\%) \\
+Sharpe Ratio & 0.97 & [0.14, 1.78] & $>$ S\&P 500 (0.93) \\
+Max Drawdown & -26.5\% & [-45.1\%, -13.1\%] & $<$ S\&P 500 (-33.7\%) \\
+Annualized Return & 16.4\% & [2.6\%, 27.6\%] & $<$ S\&P 500 (18.4\%) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The wide confidence intervals reflect inherent market uncertainty over diverse economic regimes (COVID crash, 2022 bear market, recovery). Despite this variability, the hybrid portfolio consistently achieves lower drawdown than benchmark across resampled scenarios, validating the risk-reduction objective.
+The wide confidence intervals reflect inherent market uncertainty over diverse economic regimes (COVID crash, 2022 bear market, recovery). The Sharpe ratio CI of [0.14, 1.78] spans the benchmark value of 0.93, meaning the difference is not statistically significant at the 95\% level. However, the point estimate consistently exceeds the benchmark (0.97 vs. 0.93), and the hybrid portfolio achieves lower drawdown than benchmark across nearly all resampled scenarios, validating the risk-reduction objective as the primary contribution.
 
 \newpage
 \section{Future Work}

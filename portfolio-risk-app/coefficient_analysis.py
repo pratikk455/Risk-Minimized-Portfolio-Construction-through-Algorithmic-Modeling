@@ -196,11 +196,37 @@ def run_bootstrap_analysis(n_bootstrap=1000):
 
     optimizer = PortfolioOptimizer()
 
-    # Get hybrid portfolio weights (using optimal α₀ = 0.6)
-    weights = get_portfolio_weights_with_alpha(optimizer, 0.6)
+    # Get hybrid portfolio weights using SAME method as real_backtest.py
+    # risk_score=6.5, Moderate-Growth profile
+    assessment_data = {
+        'age_group': 7,
+        'investment_horizon': 8,
+        'income_stability': 6,
+        'emergency_fund': 7,
+        'reaction_to_volatility': 6,
+        'comfort_with_uncertainty': 6,
+        'risk_reward_preference': 7,
+        'max_drawdown_tolerance': 6,
+        'loss_aversion': 4,
+        'primary_goal': 7,
+        'diversification_importance': 8,
+        'crypto_comfort': 1,
+        'alternative_assets_interest': 6,
+        'tech_disruption_belief': 6,
+        'financial_knowledge': 7,
+        'decision_confidence': 6,
+    }
+
+    result = optimizer.optimize_portfolio(
+        risk_score=6.5,
+        risk_profile="Moderate-Growth",
+        assessment_data=assessment_data,
+        method=OptimizationMethod.HYBRID
+    )
+    weights = result['allocations']
 
     # Filter for available ETFs
-    filtered_weights = {k: v for k, v in weights.items() if k in returns.columns}
+    filtered_weights = {k: v for k, v in weights.items() if k in returns.columns and k in BACKTEST_ETFS}
     total = sum(filtered_weights.values())
     if total > 0:
         filtered_weights = {k: v/total for k, v in filtered_weights.items()}
