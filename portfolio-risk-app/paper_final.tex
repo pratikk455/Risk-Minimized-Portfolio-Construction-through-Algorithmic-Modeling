@@ -45,7 +45,7 @@ Furman University \\
 
 
 \begin{abstract}
-Optimizing a portfolio is one of the fundamental challenges on Wall Street, and the tools used by institutional traders aren't available to retail investors. This paper presents a portfolio management system for retail investors, with educational components to help them understand their investments. The system combines Hierarchical Risk Parity (HRP) and Modified Markowitz Mean-Variance Optimization in a hybrid way, driven by a 28-question risk assessment that generates truly personalized portfolios rather than categorical allocations. Unlike traditional robo-advisors, which divide users into categories, we produce unique portfolios for each user based on the questionnaire. This ensures that each user receives allocations tailored to their specific risk capacity, behavioral tolerance, and thematic preferences. Backtesting on 2019-2024 market data demonstrates that the hybrid approach achieves a Sharpe ratio of 0.97 compared to 0.93 for the S\&P 500, while reducing maximum drawdown from 33.7\% to 26.5\%. The complete system, including paper and live trading integration via Alpaca Markets API, is deployed on Google Cloud Run and available as open source, representing a concrete step toward democratizing institutional-grade investment strategies.
+Optimizing a portfolio is one of the fundamental challenges on Wall Street, and the tools used by institutional traders aren't available to retail investors. This paper presents a portfolio management system for retail investors, with educational components to help them understand their investments. The system combines Hierarchical Risk Parity (HRP) and Modified Markowitz Mean-Variance Optimization in a hybrid way, driven by a 30-question risk assessment that generates truly personalized portfolios rather than categorical allocations. Unlike traditional robo-advisors, which divide users into categories, we produce unique portfolios for each user based on the questionnaire. This ensures that each user receives allocations tailored to their specific risk capacity, behavioral tolerance, and thematic preferences. Backtesting on 2019-2024 market data demonstrates that the hybrid approach achieves a Sharpe ratio of 0.97 compared to 0.93 for the S\&P 500, while reducing maximum drawdown from 33.7\% to 26.5\%. The complete system, including paper and live trading integration via Alpaca Markets API, is deployed on Google Cloud Run and available as open source, representing a concrete step toward democratizing institutional-grade investment strategies.
 \end{abstract}
 
 
@@ -59,7 +59,7 @@ Majority of retail investors default to market-cap weighted indices without bein
 
 This project is response to these gaps in that it establish a platform accessible to every individual that not only build portfolios that are risk-minimized but also is educational resource. All metrics will be streamlined and presented in application to convert complicated financial terms into economic realities that enable users to make optimal investment choices.
 
-Proposed system create full-fledged portfolio management platform that democratize institutional-quality strategies while offering educational value. System evaluate personal risk profiles using comprehensive 28-question assessment, develop diversified portfolios across multiple ETF asset classes using Hierarchical Risk Parity and Markowitz optimization, focus on reducing risk rather than maximizing returns, provide interactive learning platform with simplified metric explanations, and enable both paper and real trading through Alpaca API.
+Proposed system create full-fledged portfolio management platform that democratize institutional-quality strategies while offering educational value. System evaluate personal risk profiles using comprehensive 30-question assessment, develop diversified portfolios across multiple ETF asset classes using Hierarchical Risk Parity and Markowitz optimization, focus on reducing risk rather than maximizing returns, provide interactive learning platform with simplified metric explanations, and enable both paper and real trading through Alpaca API.
 
 
 \section{Related Work}
@@ -93,7 +93,7 @@ For this capstone, I collected data sets including risk questionnaires from user
 
 Rather than optimizing across thousands of individual securities, I curated a universe of 20 Exchange-Traded Funds (ETFs) that provide broader market exposure across different asset classes. This was done to eliminate potential overfitting and complexity. This approach made diversification easy.
 
-The stock category has eight ETFs in different investment styles and geographic regions. The bond category includes five ETFs that span the fixed-income spectrum. Alternative investments have three ETFs providing exposure to non-traditional asset classes.Table~\ref{tab:etf-universe} present complete ETF universe.
+The stock category has ten ETFs in different investment styles and geographic regions. The bond category includes five ETFs that span the fixed-income spectrum. Alternative investments have five ETFs providing exposure to non-traditional asset classes. Table~\ref{tab:etf-universe} presents the complete ETF universe.
 
 \begin{table}[H]
 \centering
@@ -112,19 +112,25 @@ Stock & VTV & Vanguard Value ETF & U.S. Value & 5 & 0.04\% \\
 Stock & VWO & Vanguard FTSE Emerging Markets ETF & Emerging Markets & 7 & 0.08\% \\
 Stock & VXUS & Vanguard FTSE All-World ex-US ETF & International & 6 & 0.07\% \\
 Stock & XLU & Utilities Select Sector SPDR Fund & Utilities/Defensive & 4 & 0.09\% \\
+Stock & ARKK & ARK Innovation ETF & Innovation/Growth & 9 & 0.75\% \\
+Stock & XLE & Energy Select Sector SPDR Fund & Energy & 7 & 0.09\% \\
 \midrule
-Bond & BND & Vanguard Total Bond Market ETF & U.S. Aggregate & 3 & 0.03\% \\
-Bond & AGG & iShares Core U.S. Aggregate Bond ETF & U.S. Aggregate & 3 & 0.03\% \\
-Bond & TLT & iShares 20+ Year Treasury Bond ETF & Long-Term Treasury & 5 & 0.15\% \\
-Bond & GOVT & iShares U.S. Treasury Bond ETF & U.S. Treasury & 2 & 0.05\% \\
-Bond & TIP & iShares TIPS Bond ETF & Inflation-Protected & 3 & 0.19\% \\
+Bond & BND & Vanguard Total Bond Market ETF & U.S. Aggregate & 1 & 0.03\% \\
+Bond & TLT & iShares 20+ Year Treasury Bond ETF & Long-Term Treasury & 2 & 0.15\% \\
+Bond & HYG & iShares High Yield Corporate Bond ETF & High Yield & 4 & 0.48\% \\
+Bond & TIP & iShares TIPS Bond ETF & Inflation-Protected & 2 & 0.19\% \\
+Bond & SHY & iShares 1-3 Year Treasury Bond ETF & Short-Term Treasury & 1 & 0.15\% \\
 \midrule
 Alt & GLD & SPDR Gold Shares & Precious Metals & 5 & 0.40\% \\
 Alt & VNQ & Vanguard Real Estate ETF & Real Estate/REITs & 6 & 0.12\% \\
 Alt & BITO & ProShares Bitcoin Strategy ETF & Cryptocurrency & 10 & 0.95\% \\
+Alt & DBC & Invesco DB Commodity Index ETF & Commodities & 7 & 0.85\% \\
+Alt & PDBC & Invesco Optimum Yield Diversified ETF & Commodities & 6 & 0.59\% \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\noindent Note: Backtesting (2019--2024) uses a subset of 13 ETFs that existed throughout the full period, excluding BITO (launched 2021), ARKK, DBC, and PDBC to ensure data consistency.
 
 \subsubsection{Risk Level Classification}
 
@@ -170,7 +176,7 @@ Beyond static data, the system retrieves real-time quotes from Yahoo Finance for
 
 \subsection{User Assessment Data}
 
-Traditional robo-advisors typically ask five to ten questions and map users into broad categories like ``Conservative,'' ``Moderate,'' or ``Aggressive.'' This approach fail to capture nuanced preferences—two individuals might both tolerate moderate risk, but one might prefer technology stocks while other prefer dividend income. Assessment I developed comprise twenty-eight questions organized into six dimensions, as shown in Table~\ref{tab:assessment-dimensions}.
+Traditional robo-advisors typically ask five to ten questions and map users into broad categories like ``Conservative,'' ``Moderate,'' or ``Aggressive.'' This approach fail to capture nuanced preferences—two individuals might both tolerate moderate risk, but one might prefer technology stocks while other prefer dividend income. Assessment I developed comprise thirty questions organized into six dimensions, as shown in Table~\ref{tab:assessment-dimensions}.
 
 \begin{table}[H]
 \centering
@@ -187,7 +193,7 @@ Traditional robo-advisors typically ask five to ten questions and map users into
 5 & Financial Literacy & 4 & Concept knowledge, chart interpretation, decision confidence, fintech familiarity \\
 6 & Time Preference & 2 & Immediate vs. deferred gratification, retirement priority \\
 \midrule
-& \textbf{Total} & \textbf{28} & \\
+& \textbf{Total} & \textbf{30} & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -212,7 +218,7 @@ Time Preference & Investment horizon focus & Growth vs. income balance \\
 \end{tabular}
 \end{table}
 
-Each response is recorded on scale from 1 to 10, creating continuous rather than categorical profile. This produce theoretical space of $10^{28}$ unique user profiles—ensuring truly personalized portfolios rather than predefined buckets.
+Each response is recorded on scale from 1 to 10, creating continuous rather than categorical profile. This produce theoretical space of $10^{30}$ unique user profiles—ensuring truly personalized portfolios rather than predefined buckets.
 
 
 \section{Methods}
