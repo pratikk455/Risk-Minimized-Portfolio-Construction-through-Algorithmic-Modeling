@@ -253,12 +253,12 @@ const EducationalTooltip = ({
             transition={{ duration: 0.2 }}
             className={`absolute z-[9999] w-80 max-w-[calc(100vw-2rem)] pointer-events-none ${getPositionClasses()}`}
           >
-            <div className="bg-dark-800 border border-neutral-700 text-white rounded-xl p-4 shadow-2xl">
+            <div className="bg-dark-800 border border-dark-700 text-white rounded-xl p-4 shadow-2xl">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">{info.emoji}</span>
                 <h4 className="font-bold text-lg">{info.title}</h4>
               </div>
-              <p className="text-neutral-300 text-sm mb-3">{info.simple}</p>
+              <p className="text-neutral-600 text-sm mb-3">{info.simple}</p>
               <div className="bg-dark-900 rounded-lg p-3">
                 <div className="flex items-start gap-2">
                   <LightBulbIcon className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
@@ -476,10 +476,10 @@ export default function PortfolioPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+      <div className="min-h-[70vh] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-2 border-primary-500/20 border-t-primary-500 mx-auto"></div>
-          <p className="mt-4 text-neutral-400">Loading portfolio...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-200 border-t-primary-600 mx-auto"></div>
+          <p className="mt-4 caption">Loading portfolio…</p>
         </div>
       </div>
     )
@@ -487,32 +487,23 @@ export default function PortfolioPage() {
 
   if (!hasPortfolio || !portfolio) {
     return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+      <div className="min-h-[70vh] flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-2xl mx-auto px-4 text-center"
+          className="max-w-xl w-full text-center"
         >
-          <div className="card p-12">
-            <ChartBarIcon className="h-24 w-24 text-neutral-600 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold text-white mb-4">No Portfolio Yet</h1>
-            <p className="text-neutral-400 mb-8">
-              You haven't generated your optimized portfolio yet. Complete the risk assessment first,
-              then generate your personalized investment portfolio.
+          <div className="card p-10 lg:p-14">
+            <div className="w-16 h-16 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center mx-auto mb-6">
+              <ChartBarIcon className="h-8 w-8 text-primary-600" />
+            </div>
+            <h1 className="heading-xl mb-3">No portfolio yet</h1>
+            <p className="body-md mb-8">
+              Complete the risk assessment to generate your personalized, Sharpe-optimized allocation.
             </p>
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => router.push('/assessment')}
-                className="btn-gradient"
-              >
-                Take Assessment
-              </button>
-              <button
-                onClick={() => router.push('/')}
-                className="btn-secondary"
-              >
-                Go Home
-              </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button onClick={() => router.push('/assessment')} className="btn-gradient">Take assessment</button>
+              <button onClick={() => router.push('/')}            className="btn-secondary">Go home</button>
             </div>
           </div>
         </motion.div>
@@ -562,8 +553,8 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-950">
-      {/* Custom Intro.js styles for dark theme */}
+    <div className="min-h-screen">
+      {/* Custom Intro.js styles */}
       <style jsx global>{`
         .introjs-tooltip {
           max-width: min(420px, calc(100vw - 40px)) !important;
@@ -717,70 +708,66 @@ export default function PortfolioPage() {
         }
       `}</style>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Header with Tour Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+          className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4"
         >
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Your Optimized Portfolio</h1>
-            <p className="text-neutral-400">Personalized allocation based on your risk profile and Sharpe ratio optimization</p>
+            <div className="eyebrow mb-3">Portfolio</div>
+            <h1 className="heading-xl text-4xl md:text-5xl tracking-[-0.03em] mb-2">Your optimized mix</h1>
+            <p className="body-md max-w-xl">Personalized allocation, Sharpe-ratio optimized for your risk profile.</p>
           </div>
           <button
-            onClick={() => {
-              startTour()
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-primary-500/25 transition-all"
+            onClick={() => startTour()}
+            className="btn-secondary inline-flex items-center gap-2 text-sm"
           >
-            <PlayIcon className="h-5 w-5" />
-            Take the Tour
-            <AcademicCapIcon className="h-5 w-5" />
+            <PlayIcon className="h-4 w-4" />
+            Take the tour
           </button>
         </motion.div>
 
-        {/* Hero Card */}
+        {/* Hero card */}
         <motion.div
           id="risk-profile-card"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-r from-primary-600 via-primary-500 to-accent-500 rounded-2xl p-8 text-white mb-8 shadow-xl shadow-primary-500/20"
+          transition={{ delay: 0.08 }}
+          className="hero-card mb-8"
         >
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-8">
             <div>
+              <div className="eyebrow mb-3">Risk profile</div>
               <EducationalTooltip content="riskProfile">
-                <h2 className="text-3xl font-bold mb-2 flex items-center gap-2">
-                  Risk Profile: {portfolio.risk_profile}
-                  <QuestionMarkCircleIcon className="h-6 w-6 opacity-70 hover:opacity-100" />
-                </h2>
+                <div className="display-lg !text-white flex items-center gap-3 cursor-help">
+                  {portfolio.risk_profile}
+                  <QuestionMarkCircleIcon className="h-6 w-6 opacity-60 hover:opacity-90" />
+                </div>
               </EducationalTooltip>
-              <p className="text-lg opacity-90">Risk Score: {portfolio.risk_score}/10</p>
-              <EducationalTooltip content="sharpeRatio">
-                <p className="opacity-80 mt-2 flex items-center gap-1 cursor-help">
-                  Optimized for risk-adjusted returns using Sharpe ratio
-                  <QuestionMarkCircleIcon className="h-4 w-4 opacity-70 hover:opacity-100" />
-                </p>
-              </EducationalTooltip>
+              <div className="flex items-center gap-3 mt-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/20 backdrop-blur text-sm font-semibold">
+                  Score {portfolio.risk_score}/10
+                </span>
+                <EducationalTooltip content="sharpeRatio">
+                  <span className="text-sm text-white/80 cursor-help">Sharpe-optimized</span>
+                </EducationalTooltip>
+              </div>
             </div>
-            <div id="expected-return-display" className="text-center md:text-right">
+
+            <div id="expected-return-display" className="md:text-right">
+              <div className="eyebrow mb-2">Expected annual return</div>
               <EducationalTooltip content="expectedReturn">
-                <div className="cursor-help">
-                  <div className="text-5xl font-bold mb-2 flex items-center justify-center md:justify-end gap-2">
-                    {portfolio.metrics.expected_return.toFixed(1)}%
-                    <QuestionMarkCircleIcon className="h-7 w-7 opacity-70 hover:opacity-100" />
-                  </div>
-                  <div className="text-lg opacity-90">Expected Annual Return</div>
+                <div className="display-xl !text-white tabular cursor-help">
+                  {portfolio.metrics.expected_return.toFixed(1)}%
                 </div>
               </EducationalTooltip>
               <EducationalTooltip content="etf">
-                <div className="mt-3 px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm cursor-help">
-                  <div className="text-sm opacity-80 flex items-center justify-center gap-1">
-                    Total Holdings
-                    <QuestionMarkCircleIcon className="h-4 w-4 opacity-70 hover:opacity-100" />
-                  </div>
-                  <div className="text-2xl font-bold">{portfolio.allocations.length} ETFs</div>
+                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/20 backdrop-blur text-sm cursor-help">
+                  <BanknotesIcon className="h-4 w-4" />
+                  <span className="font-semibold">{portfolio.allocations.length}</span>
+                  <span className="opacity-75">holdings</span>
                 </div>
               </EducationalTooltip>
             </div>
@@ -796,14 +783,16 @@ export default function PortfolioPage() {
             transition={{ delay: 0.15 }}
             className="card p-6 mb-8 border-l-4 border-l-primary-500"
           >
-            <div className="flex items-start gap-3">
-              <SparklesIcon className="h-6 w-6 text-primary-400 flex-shrink-0 mt-1" />
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center flex-shrink-0">
+                <SparklesIcon className="h-5 w-5 text-primary-600" />
+              </div>
               <div>
-                <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <h3 className="heading-sm mb-2 flex items-center gap-2">
                   AI Portfolio Insights
-                  <span className="text-xs font-normal bg-primary-500/20 text-primary-400 px-2 py-1 rounded-full">Powered by Gemini</span>
+                  <span className="badge badge-primary">Gemini</span>
                 </h3>
-                <p className="text-neutral-300 whitespace-pre-line">{portfolio.ai_recommendation}</p>
+                <p className="body-md whitespace-pre-line">{portfolio.ai_recommendation}</p>
               </div>
             </div>
           </motion.div>
@@ -849,7 +838,7 @@ export default function PortfolioPage() {
               <div>
                 <EducationalTooltip content="bonds">
                   <div className="flex justify-between mb-2 cursor-help">
-                    <span className="font-medium text-neutral-300 flex items-center gap-1">
+                    <span className="font-medium text-neutral-600 flex items-center gap-1">
                       🏦 Bonds
                       <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500 hover:text-blue-400" />
                     </span>
@@ -869,7 +858,7 @@ export default function PortfolioPage() {
               <div>
                 <EducationalTooltip content="stocks">
                   <div className="flex justify-between mb-2 cursor-help">
-                    <span className="font-medium text-neutral-300 flex items-center gap-1">
+                    <span className="font-medium text-neutral-600 flex items-center gap-1">
                       📈 Stocks
                       <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500 hover:text-emerald-400" />
                     </span>
@@ -889,7 +878,7 @@ export default function PortfolioPage() {
               <div>
                 <EducationalTooltip content="alternatives">
                   <div className="flex justify-between mb-2 cursor-help">
-                    <span className="font-medium text-neutral-300 flex items-center gap-1">
+                    <span className="font-medium text-neutral-600 flex items-center gap-1">
                       💎 Alternatives
                       <QuestionMarkCircleIcon className="h-4 w-4 text-neutral-500 hover:text-purple-400" />
                     </span>
@@ -907,7 +896,7 @@ export default function PortfolioPage() {
               </div>
 
               {/* Sharpe Ratio Score */}
-              <div id="sharpe-ratio-display" className="mt-8 pt-6 border-t border-neutral-800">
+              <div id="sharpe-ratio-display" className="mt-8 pt-6 border-t border-dark-700">
                 <EducationalTooltip content="sharpeRatio">
                   <div className="text-center cursor-help">
                     <div className="text-sm text-neutral-400 mb-2 flex items-center justify-center gap-1">
@@ -997,8 +986,8 @@ export default function PortfolioPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-neutral-700">
-                  <th className="text-left py-3 px-4 font-semibold text-neutral-300">
+                <tr className="border-b border-dark-700">
+                  <th className="text-left py-3 px-4 font-semibold text-neutral-600">
                     <EducationalTooltip content="etf">
                       <span className="flex items-center gap-1 cursor-help">
                         Ticker
@@ -1006,8 +995,8 @@ export default function PortfolioPage() {
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-neutral-300">ETF Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-neutral-300">
+                  <th className="text-left py-3 px-4 font-semibold text-neutral-600">ETF Name</th>
+                  <th className="text-left py-3 px-4 font-semibold text-neutral-600">
                     <EducationalTooltip content="diversification">
                       <span className="flex items-center gap-1 cursor-help">
                         Category
@@ -1015,7 +1004,7 @@ export default function PortfolioPage() {
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-right py-3 px-4 font-semibold text-neutral-300">
+                  <th className="text-right py-3 px-4 font-semibold text-neutral-600">
                     <EducationalTooltip content="allocation">
                       <span className="flex items-center gap-1 justify-end cursor-help">
                         Allocation
@@ -1023,7 +1012,7 @@ export default function PortfolioPage() {
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-right py-3 px-4 font-semibold text-neutral-300">
+                  <th className="text-right py-3 px-4 font-semibold text-neutral-600">
                     <EducationalTooltip content="expectedReturn">
                       <span className="flex items-center gap-1 justify-end cursor-help">
                         Exp. Return
@@ -1031,7 +1020,7 @@ export default function PortfolioPage() {
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-right py-3 px-4 font-semibold text-neutral-300">
+                  <th className="text-right py-3 px-4 font-semibold text-neutral-600">
                     <EducationalTooltip content="volatility">
                       <span className="flex items-center gap-1 justify-end cursor-help">
                         Volatility
@@ -1039,7 +1028,7 @@ export default function PortfolioPage() {
                       </span>
                     </EducationalTooltip>
                   </th>
-                  <th className="text-center py-3 px-4 font-semibold text-neutral-300">
+                  <th className="text-center py-3 px-4 font-semibold text-neutral-600">
                     <EducationalTooltip content="riskLevel">
                       <span className="flex items-center gap-1 justify-center cursor-help">
                         Risk
@@ -1056,7 +1045,7 @@ export default function PortfolioPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.6 + index * 0.05 }}
-                    className="border-b border-neutral-800 hover:bg-dark-800/50 transition-colors"
+                    className="border-b border-dark-700 hover:bg-dark-800/50 transition-colors"
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
@@ -1067,7 +1056,7 @@ export default function PortfolioPage() {
                         <span className="font-bold text-primary-400">{holding.ticker}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-neutral-300">{holding.name}</td>
+                    <td className="py-4 px-4 text-neutral-600">{holding.name}</td>
                     <td className="py-4 px-4">
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${getCategoryColorDark(holding.category)}`}>
                         {holding.category === 'bonds' ? '🏦 ' : holding.category === 'stocks' ? '📈 ' : '💎 '}
@@ -1131,7 +1120,7 @@ export default function PortfolioPage() {
             <InformationCircleIcon className="h-6 w-6 text-blue-400" />
             Next Steps
           </h3>
-          <ul className="space-y-3 text-neutral-300">
+          <ul className="space-y-3 text-neutral-600">
             <li className="flex items-start gap-2">
               <span className="text-blue-400 font-bold">1.</span>
               <span>Review your personalized ETF allocation based on your risk profile</span>

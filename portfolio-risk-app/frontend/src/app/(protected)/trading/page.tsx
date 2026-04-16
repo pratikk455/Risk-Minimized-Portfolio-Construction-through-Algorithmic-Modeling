@@ -421,136 +421,111 @@ export default function TradingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+      <div className="min-h-[70vh] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-2 border-primary-500/20 border-t-primary-500 mx-auto"></div>
-          <p className="mt-4 text-neutral-400">Loading trading dashboard...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-200 border-t-primary-600 mx-auto"></div>
+          <p className="mt-4 caption">Loading trading dashboard…</p>
         </div>
       </div>
     )
   }
 
-  // Not configured state
+  // Not configured
   if (!tradingStatus?.configured) {
     return (
-      <div className="min-h-screen bg-dark-950">
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card p-8 text-center"
-          >
-            <Cog6ToothIcon className="h-20 w-20 text-neutral-600 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold text-white mb-4">Setup Required</h1>
-            <p className="text-neutral-400 mb-8 max-w-md mx-auto">
-              To start paper trading, you need to configure your Alpaca API keys.
-              Start with a $10,000 virtual budget to practice trading!
-            </p>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card p-10 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center mx-auto mb-6">
+            <Cog6ToothIcon className="h-8 w-8 text-primary-600" />
+          </div>
+          <h1 className="heading-xl mb-3">Setup required</h1>
+          <p className="body-md mb-8 max-w-md mx-auto">
+            Configure your Alpaca API keys to start paper trading with a $10,000 virtual budget.
+          </p>
 
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 mb-8 text-left max-w-lg mx-auto">
-              <h3 className="font-bold text-blue-400 mb-3 flex items-center gap-2">
-                <InformationCircleIcon className="h-5 w-5" />
-                How to get Alpaca API Keys
-              </h3>
-              <ol className="text-blue-300/80 space-y-2 text-sm">
-                <li><span className="font-bold text-blue-400">1.</span> Go to <a href="https://alpaca.markets" target="_blank" rel="noopener noreferrer" className="underline text-blue-400 hover:text-blue-300">alpaca.markets</a> and sign up for free</li>
-                <li><span className="font-bold text-blue-400">2.</span> Navigate to Paper Trading in your dashboard</li>
-                <li><span className="font-bold text-blue-400">3.</span> Generate API keys (View → Generate New Keys)</li>
-                <li><span className="font-bold text-blue-400">4.</span> Add to your backend <code className="bg-blue-500/20 px-1 rounded">.env</code> file:</li>
-              </ol>
-              <pre className="bg-dark-800 rounded-lg p-3 mt-3 text-xs overflow-x-auto text-neutral-300">
+          <div className="card-gradient p-6 mb-8 text-left">
+            <h3 className="heading-sm mb-3 flex items-center gap-2 text-primary-700">
+              <InformationCircleIcon className="h-5 w-5" />
+              Get your Alpaca keys
+            </h3>
+            <ol className="body-sm space-y-2 list-decimal list-inside">
+              <li>Sign up free at <a href="https://alpaca.markets" target="_blank" rel="noopener noreferrer" className="underline text-primary-600 hover:text-primary-700">alpaca.markets</a></li>
+              <li>Open Paper Trading in your dashboard</li>
+              <li>Generate API keys (View → Generate New Keys)</li>
+              <li>Add them to your backend <code className="bg-dark-800 px-1.5 py-0.5 rounded text-xs">.env</code>:</li>
+            </ol>
+            <pre className="bg-neutral-900 text-neutral-100 rounded-xl p-4 mt-4 text-xs overflow-x-auto">
 {`ALPACA_API_KEY=your_api_key_here
 ALPACA_SECRET_KEY=your_secret_key_here`}
-              </pre>
-            </div>
+            </pre>
+          </div>
 
-            <button
-              onClick={() => router.push('/portfolio')}
-              className="btn-gradient"
-            >
-              Back to Portfolio
-            </button>
-          </motion.div>
-        </div>
+          <button onClick={() => router.push('/portfolio')} className="btn-gradient">
+            Back to portfolio
+          </button>
+        </motion.div>
       </div>
     )
   }
 
-  // No portfolio state
+  // No portfolio
   if (!portfolio) {
     return (
-      <div className="min-h-screen bg-dark-950">
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card p-8 text-center"
-          >
-            <ChartBarIcon className="h-20 w-20 text-neutral-600 mx-auto mb-6" />
-            <h1 className="text-3xl font-bold text-white mb-4">No Portfolio Found</h1>
-            <p className="text-neutral-400 mb-8">
-              You need to generate a portfolio before you can start trading.
-            </p>
-            <button
-              onClick={() => router.push('/assessment')}
-              className="btn-gradient"
-            >
-              Take Assessment
-            </button>
-          </motion.div>
-        </div>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card p-10 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center mx-auto mb-6">
+            <ChartBarIcon className="h-8 w-8 text-primary-600" />
+          </div>
+          <h1 className="heading-xl mb-3">No portfolio yet</h1>
+          <p className="body-md mb-8">Take the assessment to generate one before you start trading.</p>
+          <button onClick={() => router.push('/assessment')} className="btn-gradient">
+            Take assessment
+          </button>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-dark-950">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-bold text-white">Paper Trading</h1>
-                <span className="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm font-semibold">
-                  Simulated
-                </span>
+              <div className="eyebrow mb-3 inline-flex items-center gap-2">
+                Trading
+                <span className="badge badge-warning">Paper · Simulated</span>
               </div>
-              <p className="text-neutral-400">Execute your portfolio with virtual money - no real risk!</p>
+              <h1 className="heading-xl text-4xl md:text-5xl tracking-[-0.03em] mb-2">Execute your portfolio</h1>
+              <p className="body-md">Virtual $10,000 budget — practice with no real risk.</p>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Market Status Indicator */}
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+            <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-semibold ${
                 tradingStatus?.market_is_open
-                  ? 'bg-emerald-500/20 border border-emerald-500/30'
-                  : 'bg-red-500/20 border border-red-500/30'
+                  ? 'bg-success-50 text-success-700 border border-success-100'
+                  : 'bg-red-50 text-red-600 border border-red-100'
               }`}>
                 <span className="relative flex h-2 w-2">
                   {tradingStatus?.market_is_open ? (
                     <>
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-500 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-success-500"></span>
                     </>
                   ) : (
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                   )}
                 </span>
-                <span className={`text-sm font-semibold ${tradingStatus?.market_is_open ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {tradingStatus?.market_is_open ? 'Market Open' : 'Market Closed'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-neutral-400">
-                <span className="text-neutral-600">|</span>
-                <span>Updated {lastUpdated.toLocaleTimeString()}</span>
+                {tradingStatus?.market_is_open ? 'Market open' : 'Market closed'}
               </div>
               <button
                 onClick={() => { fetchTradingStatus(); fetchPositions(); }}
-                className="p-2 text-neutral-400 hover:text-white hover:bg-dark-800 rounded-lg transition-colors"
-                title="Refresh data"
+                className="p-2.5 text-neutral-500 hover:text-neutral-900 hover:bg-dark-800 rounded-2xl transition-colors"
+                title={`Updated ${lastUpdated.toLocaleTimeString()}`}
               >
                 <ArrowPathIcon className="h-5 w-5" />
               </button>
@@ -572,27 +547,31 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               transition={{ delay: 0.1 }}
               className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
             >
-              <div className="stat-card hover:border-emerald-500/30 transition-all">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="stat-label">Portfolio Value</span>
-                  <BanknotesIcon className="h-5 w-5 text-emerald-400" />
+              <div className="card card-hover p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="caption">Portfolio Value</span>
+                  <div className="w-9 h-9 rounded-xl bg-success-50 border border-success-100 flex items-center justify-center">
+                    <BanknotesIcon className="h-4 w-4 text-success-600" />
+                  </div>
                 </div>
-                <div className="stat-value text-emerald-400">
+                <div className="display-md text-neutral-900 tabular">
                   ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 {totalPL !== 0 && (
-                  <div className={`text-sm mt-1 ${totalPL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <div className={`text-sm mt-1 font-medium tabular ${totalPL >= 0 ? 'text-success-600' : 'text-red-600'}`}>
                     {totalPL >= 0 ? '+' : ''}${totalPL.toFixed(2)} ({investedAmount > 0 ? ((totalPL / investedAmount) * 100).toFixed(2) : 0}%)
                   </div>
                 )}
               </div>
 
-              <div className="stat-card hover:border-blue-500/30 transition-all">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="stat-label">Available Cash</span>
-                  <CurrencyDollarIcon className="h-5 w-5 text-blue-400" />
+              <div className="card card-hover p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="caption">Available Cash</span>
+                  <div className="w-9 h-9 rounded-xl bg-primary-50 border border-primary-100 flex items-center justify-center">
+                    <CurrencyDollarIcon className="h-4 w-4 text-primary-600" />
+                  </div>
                 </div>
-                <div className="stat-value text-blue-400">
+                <div className="display-md text-neutral-900 tabular">
                   ${availableCash.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div className="text-sm text-neutral-500 mt-1">
@@ -600,12 +579,14 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                 </div>
               </div>
 
-              <div className="stat-card hover:border-purple-500/30 transition-all">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="stat-label">Invested</span>
-                  <BanknotesIcon className="h-5 w-5 text-purple-400" />
+              <div className="card card-hover p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="caption">Invested</span>
+                  <div className="w-9 h-9 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center">
+                    <BanknotesIcon className="h-4 w-4 text-violet-600" />
+                  </div>
                 </div>
-                <div className="stat-value text-purple-400">
+                <div className="display-md text-neutral-900 tabular">
                   ${investedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div className="text-sm text-neutral-500 mt-1">
@@ -613,12 +594,14 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                 </div>
               </div>
 
-              <div className="stat-card hover:border-amber-500/30 transition-all">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="stat-label">Positions</span>
-                  <ChartBarIcon className="h-5 w-5 text-amber-400" />
+              <div className="card card-hover p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="caption">Positions</span>
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
+                    <ChartBarIcon className="h-4 w-4 text-amber-600" />
+                  </div>
                 </div>
-                <div className="stat-value text-amber-400">
+                <div className="display-md text-neutral-900 tabular">
                   {positions.length}
                 </div>
                 <div className="text-sm text-neutral-500 mt-1">
@@ -631,12 +614,12 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
 
         {/* Market Closed Banner */}
         {!tradingStatus?.market_is_open && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-6">
             <div className="flex items-center gap-3">
-              <ClockIcon className="h-6 w-6 text-red-400 flex-shrink-0" />
+              <ClockIcon className="h-6 w-6 text-red-600 flex-shrink-0" />
               <div>
-                <h4 className="font-semibold text-red-400">Market is Currently Closed</h4>
-                <p className="text-sm text-red-300/80">
+                <h4 className="font-semibold text-red-700">Market is Currently Closed</h4>
+                <p className="text-sm text-red-600/80">
                   Trading is only available during market hours: 9:30 AM - 4:00 PM ET, Monday - Friday.
                   {tradingStatus?.market_next_open && (
                     <span className="block mt-1">
@@ -657,15 +640,17 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 bg-dark-800/50 p-1 rounded-xl w-fit flex-wrap">
+        <div className="inline-flex gap-1 mb-6 bg-white border border-dark-700/60 p-1 rounded-2xl flex-wrap shadow-soft">
           {['execute', 'sell', 'positions', 'orders'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
                 activeTab === tab
-                  ? tab === 'sell' ? 'bg-amber-500 text-white shadow-lg' : 'bg-primary-500 text-white shadow-lg'
-                  : 'text-neutral-400 hover:text-white hover:bg-dark-700'
+                  ? tab === 'sell'
+                    ? 'bg-amber-500 text-white shadow-soft'
+                    : 'bg-primary-600 text-white shadow-primary'
+                  : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
               }`}
             >
               {tab === 'execute' && 'Buy'}
@@ -694,7 +679,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                 </h3>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-600 mb-2">
                     Investment Amount ($)
                   </label>
                   <input
@@ -717,7 +702,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                     <button
                       key={amount}
                       onClick={() => setInvestmentAmount(amount.toString())}
-                      className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-neutral-300 rounded-lg text-sm font-medium transition-colors"
+                      className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-neutral-600 rounded-lg text-sm font-medium transition-colors"
                     >
                       ${amount.toLocaleString()}
                     </button>
@@ -824,7 +809,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                     </div>
 
                     <div className="mb-6">
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">
+                      <label className="block text-sm font-medium text-neutral-600 mb-2">
                         Amount to Sell ($)
                       </label>
                       <input
@@ -858,7 +843,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                               option.label === '100%'
                                 ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-400'
-                                : 'bg-dark-700 hover:bg-dark-600 text-neutral-300'
+                                : 'bg-dark-700 hover:bg-dark-600 text-neutral-600'
                             }`}
                           >
                             {option.label} (${option.value.toFixed(0)})
@@ -984,7 +969,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-neutral-800">
+                      <tr className="border-b border-dark-700">
                         <th className="text-left py-3 px-4 font-semibold text-neutral-400 text-sm">Symbol</th>
                         <th className="text-right py-3 px-4 font-semibold text-neutral-400 text-sm">Qty</th>
                         <th className="text-right py-3 px-4 font-semibold text-neutral-400 text-sm">Avg Price</th>
@@ -997,11 +982,11 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                     </thead>
                     <tbody>
                       {positions.map((pos) => (
-                        <tr key={pos.symbol} className="border-b border-neutral-800/50 hover:bg-dark-800/50 transition-colors">
+                        <tr key={pos.symbol} className="border-b border-dark-700/50 hover:bg-dark-800/50 transition-colors">
                           <td className="py-4 px-4 font-bold text-primary-400">{pos.symbol}</td>
                           <td className="py-4 px-4 text-right text-white">{pos.qty.toFixed(4)}</td>
-                          <td className="py-4 px-4 text-right text-neutral-300">${pos.avg_entry_price.toFixed(2)}</td>
-                          <td className="py-4 px-4 text-right text-neutral-300">${pos.current_price.toFixed(2)}</td>
+                          <td className="py-4 px-4 text-right text-neutral-600">${pos.avg_entry_price.toFixed(2)}</td>
+                          <td className="py-4 px-4 text-right text-neutral-600">${pos.current_price.toFixed(2)}</td>
                           <td className="py-4 px-4 text-right font-semibold text-white">
                             ${pos.market_value.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                           </td>
@@ -1064,7 +1049,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-neutral-800">
+                      <tr className="border-b border-dark-700">
                         <th className="text-left py-3 px-4 font-semibold text-neutral-400 text-sm">Symbol</th>
                         <th className="text-left py-3 px-4 font-semibold text-neutral-400 text-sm">Side</th>
                         <th className="text-right py-3 px-4 font-semibold text-neutral-400 text-sm">Qty</th>
@@ -1076,7 +1061,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                     </thead>
                     <tbody>
                       {orders.map((order) => (
-                        <tr key={order.id} className="border-b border-neutral-800/50 hover:bg-dark-800/50 transition-colors">
+                        <tr key={order.id} className="border-b border-dark-700/50 hover:bg-dark-800/50 transition-colors">
                           <td className="py-4 px-4 font-bold text-primary-400">{order.symbol}</td>
                           <td className="py-4 px-4">
                             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${
@@ -1089,8 +1074,8 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                           <td className="py-4 px-4 text-right text-white">
                             {order.qty?.toFixed(4) || (order.notional && `$${order.notional.toFixed(2)}`)}
                           </td>
-                          <td className="py-4 px-4 text-right text-neutral-300">{order.filled_qty.toFixed(4)}</td>
-                          <td className="py-4 px-4 text-right text-neutral-300">
+                          <td className="py-4 px-4 text-right text-neutral-600">{order.filled_qty.toFixed(4)}</td>
+                          <td className="py-4 px-4 text-right text-neutral-600">
                             {order.filled_avg_price ? `$${order.filled_avg_price.toFixed(2)}` : '-'}
                           </td>
                           <td className="py-4 px-4 text-center">
@@ -1153,7 +1138,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-dark-900 border border-neutral-800 rounded-2xl shadow-2xl p-6 max-w-md w-full"
+              className="bg-dark-900 border border-dark-700 rounded-2xl shadow-2xl p-6 max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold text-white mb-4">Confirm Portfolio Execution</h3>
@@ -1162,7 +1147,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               </p>
               <div className="bg-dark-800 rounded-xl p-4 mb-6">
                 <p className="text-sm text-neutral-400 mb-2">This will place market orders for:</p>
-                <ul className="text-sm text-neutral-300 space-y-1">
+                <ul className="text-sm text-neutral-600 space-y-1">
                   {portfolio.allocations?.slice(0, 5).map((alloc: PortfolioAllocation) => (
                     <li key={alloc.ticker}>
                       • <span className="font-semibold text-primary-400">{alloc.ticker}</span>: ${((alloc.weight / 100) * parseFloat(investmentAmount)).toFixed(2)}
@@ -1176,7 +1161,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-3 bg-dark-700 text-neutral-300 rounded-xl font-semibold hover:bg-dark-600 transition-colors"
+                  className="flex-1 py-3 bg-dark-700 text-neutral-600 rounded-xl font-semibold hover:bg-dark-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1206,7 +1191,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-dark-900 border border-neutral-800 rounded-2xl shadow-2xl p-6 max-w-md w-full"
+              className="bg-dark-900 border border-dark-700 rounded-2xl shadow-2xl p-6 max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold text-white mb-4">Confirm Portfolio Sell</h3>
@@ -1215,7 +1200,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               </p>
               <div className="bg-dark-800 rounded-xl p-4 mb-6">
                 <p className="text-sm text-neutral-400 mb-2">This will sell proportionally from each position:</p>
-                <ul className="text-sm text-neutral-300 space-y-1">
+                <ul className="text-sm text-neutral-600 space-y-1">
                   {portfolio.allocations?.slice(0, 5).map((alloc: PortfolioAllocation) => {
                     const sellFromPosition = (alloc.weight / 100) * parseFloat(portfolioSellAmount || '0')
                     const position = positions.find(p => p.symbol === alloc.ticker)
@@ -1240,7 +1225,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowSellConfirmModal(false)}
-                  className="flex-1 py-3 bg-dark-700 text-neutral-300 rounded-xl font-semibold hover:bg-dark-600 transition-colors"
+                  className="flex-1 py-3 bg-dark-700 text-neutral-600 rounded-xl font-semibold hover:bg-dark-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1270,7 +1255,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-dark-900 border border-neutral-800 rounded-2xl shadow-2xl p-6 max-w-lg w-full"
+              className="bg-dark-900 border border-dark-700 rounded-2xl shadow-2xl p-6 max-w-lg w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
@@ -1333,7 +1318,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
 
               {/* Sell Amount Input */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                <label className="block text-sm font-medium text-neutral-600 mb-2">
                   {sellMode === 'amount' ? 'Amount to Sell ($)' : 'Percentage to Sell (%)'}
                 </label>
                 <div className="relative">
@@ -1361,7 +1346,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                       <button
                         key={pct}
                         onClick={() => setSellAmount(pct.toString())}
-                        className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-neutral-300 rounded-lg text-sm font-medium transition-colors"
+                        className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-neutral-600 rounded-lg text-sm font-medium transition-colors"
                       >
                         {pct}%
                       </button>
@@ -1373,7 +1358,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                       <button
                         key={amt}
                         onClick={() => setSellAmount(amt.toString())}
-                        className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-neutral-300 rounded-lg text-sm font-medium transition-colors"
+                        className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-neutral-600 rounded-lg text-sm font-medium transition-colors"
                       >
                         ${amt}
                       </button>
@@ -1407,7 +1392,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
                     onChange={(e) => setReinvestAfterSell(e.target.checked)}
                     className="w-5 h-5 rounded border-neutral-600 bg-dark-700 text-primary-500 focus:ring-primary-500"
                   />
-                  <span className="text-neutral-300">
+                  <span className="text-neutral-600">
                     Reinvest proceeds using portfolio weights
                   </span>
                 </label>
@@ -1422,7 +1407,7 @@ ALPACA_SECRET_KEY=your_secret_key_here`}
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowSellModal(false)}
-                  className="flex-1 py-3 bg-dark-700 text-neutral-300 rounded-xl font-semibold hover:bg-dark-600 transition-colors"
+                  className="flex-1 py-3 bg-dark-700 text-neutral-600 rounded-xl font-semibold hover:bg-dark-600 transition-colors"
                 >
                   Cancel
                 </button>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Navbar from '@/components/Navbar'
+import AppShell from '@/components/AppShell'
 
 export default function ProtectedLayout({
   children,
@@ -21,22 +21,16 @@ export default function ProtectedLayout({
     }
   }, [router])
 
-  // Show loading while checking auth
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-200 border-t-primary-600 mx-auto"></div>
+          <p className="mt-4 caption">Loading…</p>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50">
-      <Navbar />
-      <main>{children}</main>
-    </div>
-  )
+  return <AppShell>{children}</AppShell>
 }

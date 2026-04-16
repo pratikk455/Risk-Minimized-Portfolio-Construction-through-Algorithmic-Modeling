@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-ink-900 text-ink-50 antialiased font-sans;
+  background-image:
+    radial-gradient(120% 80% at 20% 0%, rgba(91, 91, 246, 0.18) 0%, transparent 55%),
+    radial-gradient(90% 60% at 100% 100%, rgba(0, 212, 168, 0.12) 0%, transparent 55%),
+    radial-gradient(80% 70% at 70% 20%, rgba(247, 99, 67, 0.08) 0%, transparent 60%);
+  background-attachment: fixed;
+  overflow: hidden;
+}
+
+/* Utility: premium gradient text */
+.text-gradient {
+  background: linear-gradient(120deg, #ffffff 0%, #c7c8ff 35%, #6ef0c7 75%, #ffc9a7 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: shimmer 8s linear infinite;
+}
+
+.text-gradient-warm {
+  background: linear-gradient(120deg, #f76343 0%, #f7b955 50%, #ffd4a7 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-cool {
+  background: linear-gradient(120deg, #6eb9ff 0%, #5b5bf6 55%, #00d4a8 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glass card */
+.glass {
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.divider-gradient {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+}
+
+/* Scrollbar hidden in presentation mode */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Number display — tabular */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Chart label */
+.axis-label {
+  fill: rgba(255, 255, 255, 0.65);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.axis-tick {
+  fill: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.axis-line {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1.2;
+}

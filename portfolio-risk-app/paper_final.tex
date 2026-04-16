@@ -64,8 +64,6 @@ Proposed system create full-fledged portfolio management platform that democrati
 
 \section{Related Work}
 
-In modern financial theory, portfolio optimization is a well-known concept and therefore used in asset the management and quantitative finance industry. These companies try to find the best way to allocate assets while meeting the expected returns and maintaining the risks.
-
 Among all the concepts, mean-variance theory~\cite{markowitz1952} is the main idea behind modern finance introduced by Markowitz. He developed a mathematical model of diversification in a group of assets. This principle was then used by Warren Buffett with a famous saying, "never put all the eggs in one basket." Markowitz showed that, for a given variance or standard deviation, investors can actually make efficient portfolios by maximizing expected returns.
 
 On top of Markowitz's foundational model, Fabozzi, Markowitz, and Gupta~\cite{fabozzi2008portfolio} introduced more theoretical concepts such as the efficient frontier, indifference curves, and the role of investor utility in identifying optimal portfolios. Their work emphasized that portfolio construction is not just about combining assets but quantifying the relationship between expected return, risk, and correlation. They showed how diversification can reduce overall portfolio variance even when individual assets can be risky. This reinforced the mathematical and behavioral logic behind mean-variance analysis, establishing the groundwork for later developments in computational and algorithmic optimization approaches.
@@ -130,7 +128,7 @@ Alt & PDBC & Invesco Optimum Yield Diversified ETF & Commodities & 6 & 0.59\% \\
 \end{tabular}
 \end{table}
 
-\noindent Note: Backtesting (2019--2024) uses a subset of 13 ETFs that existed throughout the full period, excluding BITO (launched 2021), ARKK, DBC, and PDBC to ensure data consistency.
+\noindent *Note: Backtesting (2019--2024) uses a subset of 13 ETFs that existed throughout the full period, excluding BITO (launched 2021), ARKK, DBC, and PDBC to ensure data consistency.
 
 \subsubsection{Risk Level Classification}
 
@@ -372,7 +370,7 @@ Deployment & Google Cloud Run & Serverless hosting \\
 \end{tabular}
 \end{table}
 
-\newpage
+
 
 \section{Results}
 
@@ -422,7 +420,7 @@ However, this limitation highlight important insight: no strategy outperform in 
 
 \subsection{Risk-Return Analysis}
 
-Figure~\ref{fig:riskreturn} show risk-return characteristics of each strategy, illustrating tradeoff between volatility reduction and return. Hybrid approach occupy favorable position in risk-return space, achieving 93\% of S\&P 500's returns while reducing volatility by 11\% and maximum drawdown by 21\%. Figure~\ref{fig:allocation} demonstrate how asset allocation shift across risk spectrum using actual optimizer, from bond-heavy conservative portfolios to equity-dominated aggressive allocations.
+Figure~\ref{fig:riskreturn} show risk-return characteristics of each strategy, illustrating tradeoff between volatility reduction and return. Hybrid approach occupy favorable position in risk-return space, achieving 93\% of S\&P 500's returns while reducing volatility by 11\% and maximum drawdown by 21\%. 
 
 \begin{figure}[H]
 \centering
@@ -431,6 +429,8 @@ Figure~\ref{fig:riskreturn} show risk-return characteristics of each strategy, i
 \label{fig:riskreturn}
 \end{figure}
 
+Figure~\ref{fig:allocation} demonstrate how asset allocation shift across risk spectrum using actual optimizer, from bond-heavy conservative portfolios to equity-dominated aggressive allocations.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\textwidth]{paper_figures/allocation_by_risk.pdf}
@@ -438,7 +438,7 @@ Figure~\ref{fig:riskreturn} show risk-return characteristics of each strategy, i
 \label{fig:allocation}
 \end{figure}
 
-\noindent Smooth transition from conservative to aggressive allocations demonstrate that optimizer respond predictably to changes in user risk preferences, avoiding discontinuous jumps that could confuse users or produce inconsistent portfolios.
+
 
 \subsection{Monte Carlo Simulation}
 
@@ -500,7 +500,7 @@ Annualized Return & 16.4\% & [2.6\%, 27.6\%] & $<$ S\&P 500 (18.4\%) \\
 
 The wide confidence intervals reflect inherent market uncertainty over diverse economic regimes (COVID crash, 2022 bear market, recovery). The Sharpe ratio CI of [0.14, 1.78] spans the benchmark value of 0.93, meaning the difference is not statistically significant at the 95\% level. However, the point estimate consistently exceeds the benchmark (0.97 vs. 0.93), and the hybrid portfolio achieves lower drawdown than benchmark across nearly all resampled scenarios, validating the risk-reduction objective as the primary contribution.
 
-\newpage
+
 \section{Future Work}
 
 Several extensions would enhance system's capabilities. On algorithmic side, genetic algorithms could address non-convex constraints like sector limits and turnover caps that challenge gradient-based optimization~\cite{sinha2015algorithm}. Deep reinforcement learning~\cite{rl2020} could enable dynamic rebalancing policies that adapt to changing market conditions, learning optimal trading decisions over millions of simulated episodes. Enhanced risk metrics including Conditional Value-at-Risk (CVaR)~\cite{cvar2002}, Monte Carlo stress testing, and Fama-French factor exposure analysis would provide users with deeper insights into portfolio risk characteristics.

@@ -50,19 +50,22 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className="glass sticky top-0 z-50 border-b border-neutral-800/50">
+    <nav className="glass sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-primary-500 via-primary-600 to-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20 group-hover:shadow-primary-500/40 transition-all">
-              <span className="text-white font-bold text-sm">H</span>
+            <div
+              className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-primary group-hover:shadow-primary-lg transition-all"
+              style={{ background: 'linear-gradient(135deg, #5B5BF6 0%, #8B5CF6 55%, #F76343 100%)' }}
+            >
+              <span className="text-on-dark font-bold text-sm">H</span>
             </div>
-            <span className="font-bold text-lg text-white">Hedgewise</span>
+            <span className="font-bold text-lg tracking-tight text-neutral-900">Hedgewise</span>
           </Link>
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1 bg-dark-800/50 rounded-full p-1">
+          <div className="hidden md:flex items-center gap-1 bg-dark-800/70 rounded-full p-1 border border-dark-700/60">
             {navLinks.map((link) => {
               const shouldShow = link.showAlways || (link.showWhenLoggedIn && isLoggedIn)
               if (!shouldShow) return null
@@ -90,7 +93,7 @@ export default function Navbar() {
             {isLoggedIn ? (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl font-medium transition-all"
+                className="flex items-center gap-2 px-4 py-2 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-2xl font-medium transition-all"
               >
                 <ArrowRightOnRectangleIcon className="h-5 w-5" />
                 Logout
@@ -116,7 +119,7 @@ export default function Navbar() {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-neutral-400 hover:text-white hover:bg-dark-800 rounded-xl transition-all"
+            className="md:hidden p-2 text-neutral-500 hover:text-neutral-900 hover:bg-dark-800 rounded-2xl transition-all"
           >
             {mobileMenuOpen ? (
               <XMarkIcon className="h-6 w-6" />
@@ -128,7 +131,7 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-neutral-800/50 animate-slide-down">
+          <div className="md:hidden py-4 border-t border-dark-700/60 animate-slide-down">
             <div className="flex flex-col gap-1">
               {navLinks.map((link) => {
                 const shouldShow = link.showAlways || (link.showWhenLoggedIn && isLoggedIn)
@@ -140,10 +143,10 @@ export default function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-medium transition-all ${
                       isActive(link.href)
-                        ? 'bg-primary-500/20 text-primary-400'
-                        : 'text-neutral-400 hover:bg-dark-800 hover:text-white'
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'text-neutral-500 hover:bg-dark-800 hover:text-neutral-900'
                     }`}
                   >
                     <Icon className="h-5 w-5" />
@@ -152,14 +155,14 @@ export default function Navbar() {
                 )
               })}
 
-              <div className="border-t border-neutral-800/50 pt-4 mt-2">
+              <div className="border-t border-dark-700/60 pt-4 mt-2">
                 {isLoggedIn ? (
                   <button
                     onClick={() => {
                       handleLogout()
                       setMobileMenuOpen(false)
                     }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl font-medium transition-all"
+                    className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-2xl font-medium transition-all"
                   >
                     <ArrowRightOnRectangleIcon className="h-5 w-5" />
                     Logout
@@ -169,7 +172,7 @@ export default function Navbar() {
                     <Link
                       href="/login"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="px-4 py-3 text-center text-neutral-300 hover:bg-dark-800 rounded-xl font-medium transition-all"
+                      className="px-4 py-3 text-center text-neutral-700 hover:bg-dark-800 rounded-2xl font-medium transition-all"
                     >
                       Login
                     </Link>

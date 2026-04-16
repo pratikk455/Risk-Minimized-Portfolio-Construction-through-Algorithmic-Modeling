@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear All Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .success {
+            color: #22c55e;
+            font-weight: bold;
+            margin-top: 20px;
+            display: none;
+        }
+        .list {
+            text-align: left;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f3f4f6;
+            border-radius: 10px;
+        }
+        .list-item {
+            padding: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Clear All Storage</h1>
+        <p>This will clear all saved authentication data:</p>
+        
+        <div class="list">
+            <div class="list-item">✓ Access tokens</div>
+            <div class="list-item">✓ Refresh tokens</div>
+            <div class="list-item">✓ User ID</div>
+            <div class="list-item">✓ Assessment results</div>
+            <div class="list-item">✓ Portfolio data</div>
+            <div class="list-item">✓ All localStorage items</div>
+            <div class="list-item">✓ All sessionStorage items</div>
+            <div class="list-item">✓ All cookies</div>
+        </div>
+
+        <button onclick="clearAllStorage()">Clear All Storage</button>
+        <button onclick="window.location.href='http://localhost:3003'">Go to App</button>
+        
+        <div class="success" id="success">
+            ✅ All storage cleared successfully!<br>
+            <small>Redirecting to app in 2 seconds...</small>
+        </div>
+    </div>
+
+    <script>
+        function clearAllStorage() {
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+
+            // Clear specific items that might be saved
+            const itemsToClear = [
+                'access_token',
+                'refresh_token',
+                'user_id',
+                'assessmentResults',
+                'pendingAssessment',
+                'portfolioGenerated',
+                'auth-storage',
+                'pending_user_id'
+            ];
+
+            itemsToClear.forEach(item => {
+                localStorage.removeItem(item);
+                sessionStorage.removeItem(item);
+            });
+
+            // Show success message
+            document.getElementById('success').style.display = 'block';
+            
+            // Redirect after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3003';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

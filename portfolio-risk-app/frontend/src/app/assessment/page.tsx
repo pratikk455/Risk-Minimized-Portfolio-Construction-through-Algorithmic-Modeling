@@ -418,10 +418,10 @@ export default function AssessmentPage() {
                     ? 'border-emerald-500/50 bg-emerald-500/10'
                     : section.progress > 0
                     ? 'border-amber-500/50 bg-amber-500/10'
-                    : 'border-neutral-800 bg-dark-800/50'
+                    : 'border-dark-700 bg-dark-800/50'
                 }`}
               >
-                <div className="text-xs font-medium text-neutral-300 mb-1">{section.name}</div>
+                <div className="text-xs font-medium text-neutral-600 mb-1">{section.name}</div>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-2 bg-dark-700 rounded-full overflow-hidden">
                     <div
@@ -481,7 +481,7 @@ export default function AssessmentPage() {
 
               {/* Slider Scale */}
               <div className="mt-8 mb-6">
-                <div className="flex justify-between text-sm text-neutral-300 mb-4 px-2">
+                <div className="flex justify-between text-sm text-neutral-600 mb-4 px-2">
                   <span className="text-left max-w-[45%]">
                     <span className="font-medium text-red-400">1:</span> {currentQuestion.scale.min.label}
                   </span>
@@ -519,11 +519,11 @@ export default function AssessmentPage() {
           </AnimatePresence>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-10 pt-6 border-t border-neutral-800">
+          <div className="flex justify-between mt-10 pt-6 border-t border-dark-700">
             <button
               onClick={handlePrevious}
               disabled={currentQuestionIndex === 0}
-              className="px-6 py-3 text-neutral-300 bg-dark-700 rounded-xl font-medium hover:bg-dark-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-6 py-3 text-neutral-600 bg-dark-700 rounded-xl font-medium hover:bg-dark-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               ← Previous
             </button>

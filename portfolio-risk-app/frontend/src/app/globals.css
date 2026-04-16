@@ -4,293 +4,396 @@
 
 @layer base {
   :root {
-    --background: 13 13 20;
-    --foreground: 250 250 250;
-    --card: 26 26 36;
-    --card-foreground: 250 250 250;
-    --primary: 99 102 241;
+    --background: 245 247 251;       /* dark-950 page bg */
+    --foreground: 11 14 20;          /* near-black text */
+    --card: 255 255 255;             /* pure white card */
+    --card-foreground: 11 14 20;
+    --primary: 91 91 246;            /* primary-500 */
     --primary-foreground: 255 255 255;
-    --muted: 45 45 58;
-    --muted-foreground: 161 161 170;
-    --accent: 6 182 212;
-    --border: 63 63 70;
+    --muted: 238 241 247;            /* dark-800 */
+    --muted-foreground: 107 114 128; /* neutral-400 */
+    --accent: 0 212 168;             /* mint */
+    --border: 228 232 240;           /* dark-700 */
   }
-}
 
-@layer base {
   * {
-    @apply border-neutral-800;
+    @apply border-dark-700;
   }
 
   html {
-    @apply scroll-smooth;
+    @apply scroll-smooth antialiased;
   }
 
   body {
-    @apply bg-dark-950 text-white antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    background: linear-gradient(180deg, #FAFBFF 0%, #F3F5FC 100%);
+    min-height: 100vh;
+    color: #0B0E14;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    letter-spacing: -0.01em;
   }
 
-  /* Custom scrollbar - Revolut style */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
+  /* Soft, rounded scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    @apply bg-neutral-700 rounded-full;
+    background: #D8DEEA;
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
+  ::-webkit-scrollbar-thumb:hover { background: #BDC5D4; background-clip: padding-box; }
 
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-neutral-600;
-  }
+  /* Selection */
+  ::selection { background: #DFE3FF; color: #1A184F; }
+
+  /* Headings — tight, modern tracking */
+  h1, h2, h3, h4 { letter-spacing: -0.025em; }
 }
 
 @layer components {
-  /* Revolut-style buttons */
+  /* ───────── Buttons ───────── */
   .btn-primary {
-    @apply bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-xl font-semibold
-           transition-all duration-200 ease-out active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-2xl font-semibold
+           shadow-primary hover:shadow-primary-lg transition-all duration-200 ease-out
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply bg-dark-800 hover:bg-dark-700 text-white px-6 py-3 rounded-xl font-semibold
-           border border-neutral-700 hover:border-neutral-600 transition-all duration-200 ease-out active:scale-[0.98];
+    @apply bg-white hover:bg-dark-800 text-neutral-900 px-6 py-3 rounded-2xl font-semibold
+           border border-dark-700 hover:border-dark-600 shadow-soft hover:shadow-soft-md
+           transition-all duration-200 ease-out active:scale-[0.98];
   }
 
   .btn-ghost {
-    @apply bg-transparent hover:bg-dark-800 text-neutral-300 hover:text-white px-4 py-2 rounded-xl
-           font-medium transition-all duration-200 ease-out;
+    @apply bg-transparent hover:bg-dark-800 text-neutral-600 hover:text-neutral-900
+           px-4 py-2 rounded-2xl font-medium transition-all duration-200 ease-out;
   }
 
   .btn-gradient {
-    @apply bg-gradient-to-r from-primary-500 via-primary-600 to-accent-500 text-white px-6 py-3 rounded-xl
-           font-semibold transition-all duration-200 ease-out hover:opacity-90 active:scale-[0.98]
-           shadow-lg shadow-primary-500/25;
+    @apply text-white px-6 py-3 rounded-2xl font-semibold transition-all duration-200 ease-out
+           hover:opacity-95 active:scale-[0.98] shadow-primary hover:shadow-primary-lg;
+    background: linear-gradient(135deg, #5B5BF6 0%, #8B5CF6 55%, #F76343 100%);
   }
 
-  /* Revolut-style cards */
+  .btn-dark {
+    @apply bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-3 rounded-2xl font-semibold
+           shadow-soft-md transition-all duration-200 ease-out active:scale-[0.98];
+  }
+
+  /* ───────── Cards ───────── */
   .card {
-    @apply bg-dark-900 rounded-2xl border border-neutral-800/50 transition-all duration-200;
+    @apply bg-white rounded-3xl border border-dark-700/60 shadow-soft transition-all duration-200;
   }
 
   .card-hover {
-    @apply hover:border-neutral-700 hover:bg-dark-800/50;
+    @apply hover:border-dark-600/70 hover:shadow-soft-md hover:-translate-y-0.5;
   }
 
   .card-interactive {
-    @apply bg-dark-900 rounded-2xl border border-neutral-800/50
-           hover:border-primary-500/30 hover:bg-dark-800/50
+    @apply bg-white rounded-3xl border border-dark-700/60 shadow-soft
+           hover:border-primary-300/70 hover:shadow-soft-md hover:-translate-y-0.5
            transition-all duration-200 cursor-pointer;
   }
 
   .card-gradient {
-    @apply bg-gradient-to-br from-dark-900 to-dark-800 rounded-2xl border border-neutral-800/50;
+    @apply rounded-3xl border border-dark-700/60 shadow-soft;
+    background:
+      linear-gradient(135deg, rgba(91,91,246,0.05) 0%, rgba(0,212,168,0.05) 100%),
+      #FFFFFF;
   }
 
-  /* Revolut-style inputs */
+  /* Apple-Card style hero surface — iridescent */
+  .card-hero {
+    @apply rounded-3xl text-white p-8 shadow-soft-lg relative overflow-hidden;
+    background: linear-gradient(135deg, #A78BFA 0%, #60A5FA 35%, #34D399 70%, #FCD34D 100%);
+    background-size: 200% 200%;
+    animation: aurora 18s ease infinite;
+  }
+  .card-hero::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: radial-gradient(ellipse at top left, rgba(255,255,255,0.35), transparent 60%);
+  }
+
+  /* ───────── Inputs ───────── */
   .input {
-    @apply bg-dark-800 border border-neutral-700 rounded-xl px-4 py-3 text-white
-           placeholder:text-neutral-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20
+    @apply bg-white border border-dark-700 rounded-2xl px-4 py-3 text-neutral-900
+           placeholder:text-neutral-400 shadow-soft
+           focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15
            transition-all duration-200;
   }
 
   .input-large {
-    @apply bg-dark-800 border border-neutral-700 rounded-xl px-4 py-4 text-xl font-semibold text-white
-           placeholder:text-neutral-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20
+    @apply bg-white border border-dark-700 rounded-2xl px-5 py-4 text-xl font-semibold text-neutral-900
+           placeholder:text-neutral-400 shadow-soft
+           focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15
            transition-all duration-200;
   }
 
-  /* Glass effect */
+  /* ───────── Glass (translucent light) ───────── */
   .glass {
-    @apply bg-dark-900/80 backdrop-blur-xl border border-neutral-800/50;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(228, 232, 240, 0.6);
   }
 
-  /* Gradient text */
+  /* ───────── Typography system ───────── */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary-400 via-primary-500 to-accent-400 bg-clip-text text-transparent;
+    background: linear-gradient(135deg, #5B5BF6 0%, #8B5CF6 50%, #00D4A8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
-  /* Revolut-style balance display */
-  .balance-display {
-    @apply text-4xl md:text-5xl font-bold tracking-tight;
-  }
+  /* Display scale — for big money numbers, hero headlines */
+  .display-2xl { @apply text-6xl md:text-7xl font-bold text-neutral-900; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+  .display-xl  { @apply text-5xl md:text-6xl font-bold text-neutral-900; letter-spacing: -0.04em;  font-variant-numeric: tabular-nums; }
+  .display-lg  { @apply text-4xl md:text-5xl font-bold text-neutral-900; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
+  .display-md  { @apply text-3xl md:text-4xl font-bold text-neutral-900; letter-spacing: -0.03em;  font-variant-numeric: tabular-nums; }
 
-  /* Stat cards */
+  /* Heading scale */
+  .heading-xl  { @apply text-3xl font-bold text-neutral-900; letter-spacing: -0.025em; }
+  .heading-lg  { @apply text-2xl font-bold text-neutral-900; letter-spacing: -0.02em; }
+  .heading-md  { @apply text-xl  font-semibold text-neutral-900; letter-spacing: -0.015em; }
+  .heading-sm  { @apply text-lg  font-semibold text-neutral-900; letter-spacing: -0.01em; }
+
+  /* Body scale */
+  .body-lg  { @apply text-lg text-neutral-700; }
+  .body-md  { @apply text-base text-neutral-700; }
+  .body-sm  { @apply text-sm text-neutral-600; }
+  .body-xs  { @apply text-xs text-neutral-500; }
+
+  /* Supporting text / labels */
+  .eyebrow  { @apply text-xs font-semibold uppercase tracking-[0.12em] text-primary-600; }
+  .caption  { @apply text-xs font-medium text-neutral-500; }
+  .mono     { font-family: var(--font-mono), ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  /* Legacy alias */
+  .balance-display { @apply display-xl; }
+
+  /* ───────── Stat cards ───────── */
   .stat-card {
-    @apply bg-dark-900 rounded-2xl p-5 border border-neutral-800/50;
+    @apply bg-white rounded-3xl p-6 border border-dark-700/60 shadow-soft
+           hover:shadow-soft-md transition-all duration-200;
   }
+  .stat-value { @apply text-3xl font-bold text-neutral-900 tracking-tight; }
+  .stat-label { @apply text-sm text-neutral-400 font-medium; }
+  .stat-change-positive { @apply text-success-600 text-sm font-semibold; }
+  .stat-change-negative { @apply text-red-500 text-sm font-semibold; }
 
-  .stat-value {
-    @apply text-2xl font-bold text-white;
-  }
-
-  .stat-label {
-    @apply text-sm text-neutral-400 font-medium;
-  }
-
-  .stat-change-positive {
-    @apply text-emerald-400 text-sm font-medium;
-  }
-
-  .stat-change-negative {
-    @apply text-red-400 text-sm font-medium;
-  }
-
-  /* Navigation pill */
+  /* ───────── Navigation pill ───────── */
   .nav-pill {
     @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200;
   }
-
   .nav-pill-active {
-    @apply bg-dark-800 text-white;
+    @apply bg-white text-neutral-900 shadow-soft;
   }
-
   .nav-pill-inactive {
-    @apply text-neutral-400 hover:text-white hover:bg-dark-800/50;
+    @apply text-neutral-500 hover:text-neutral-900 hover:bg-white/60;
   }
 
-  /* Tab buttons - Revolut style */
+  /* ───────── Segmented tabs ───────── */
   .tab-button {
-    @apply px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200;
+    @apply px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200;
   }
-
   .tab-button-active {
-    @apply bg-white text-dark-950;
+    @apply bg-neutral-900 text-white shadow-soft-md;
   }
-
   .tab-button-inactive {
-    @apply bg-dark-800 text-neutral-400 hover:text-white hover:bg-dark-700;
+    @apply bg-transparent text-neutral-500 hover:text-neutral-900 hover:bg-white/70;
   }
 
-  /* List items */
+  /* ───────── List items ───────── */
   .list-item {
-    @apply flex items-center justify-between py-4 px-4 -mx-4 rounded-xl
-           hover:bg-dark-800/50 transition-all duration-150 cursor-pointer;
+    @apply flex items-center justify-between py-4 px-4 -mx-4 rounded-2xl
+           hover:bg-dark-800 transition-all duration-150 cursor-pointer;
   }
 
-  /* Badge styles */
+  /* ───────── Badges ───────── */
   .badge {
-    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
   }
+  .badge-primary { @apply bg-primary-100 text-primary-700; }
+  .badge-success { @apply bg-success-100 text-success-700; }
+  .badge-warning { @apply bg-amber-100 text-amber-700; }
+  .badge-danger  { @apply bg-red-100 text-red-600; }
+  .badge-neutral { @apply bg-dark-800 text-neutral-600; }
 
-  .badge-primary {
-    @apply bg-primary-500/20 text-primary-400;
-  }
-
-  .badge-success {
-    @apply bg-emerald-500/20 text-emerald-400;
-  }
-
-  .badge-warning {
-    @apply bg-amber-500/20 text-amber-400;
-  }
-
-  .badge-danger {
-    @apply bg-red-500/20 text-red-400;
-  }
-
-  /* Progress bar */
+  /* ───────── Progress ───────── */
   .progress-bar {
-    @apply h-1 bg-dark-700 rounded-full overflow-hidden;
+    @apply h-1.5 bg-dark-800 rounded-full overflow-hidden;
   }
-
   .progress-bar-fill {
-    @apply h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full transition-all duration-500;
+    @apply h-full rounded-full transition-all duration-500;
+    background: linear-gradient(90deg, #5B5BF6 0%, #00D4A8 100%);
   }
 
-  /* Divider */
-  .divider {
-    @apply h-px bg-neutral-800 my-4;
-  }
+  /* ───────── Misc ───────── */
+  .divider { @apply h-px bg-dark-700 my-4; }
 
-  /* Modal overlay */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-50;
+    @apply fixed inset-0 z-50;
+    background: rgba(15, 23, 42, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
-  /* Section header */
-  .section-header {
-    @apply text-lg font-semibold text-white mb-4;
+  .section-header    { @apply text-lg font-bold text-neutral-900 mb-4 tracking-tight; }
+  .section-subheader { @apply text-sm text-neutral-500 mb-6; }
+
+  /* ───────── App shell ───────── */
+  .app-sidebar {
+    @apply hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 bg-white/70 border-r border-dark-700/70 z-40;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
   }
 
-  .section-subheader {
-    @apply text-sm text-neutral-400 mb-6;
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-2xl text-sm font-medium transition-all duration-150 cursor-pointer;
   }
+  .sidebar-item-inactive {
+    @apply text-neutral-500 hover:text-neutral-900 hover:bg-dark-800;
+  }
+  .sidebar-item-active {
+    @apply text-primary-700 bg-primary-50 shadow-soft;
+  }
+
+  .app-topbar {
+    @apply glass sticky top-0 z-30 h-16 flex items-center;
+  }
+
+  /* Mobile bottom tab bar (Robinhood-style) */
+  .app-bottombar {
+    @apply fixed bottom-0 inset-x-0 h-16 lg:hidden z-40 flex items-center justify-around
+           bg-white/85 border-t border-dark-700/60;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  .bottombar-item {
+    @apply flex flex-col items-center gap-1 text-[11px] font-medium transition-colors duration-150;
+  }
+  .bottombar-item-inactive { @apply text-neutral-500; }
+  .bottombar-item-active   { @apply text-primary-600; }
+
+  /* ───────── Hero balance surface ───────── */
+  .hero-card {
+    @apply rounded-[28px] p-8 relative overflow-hidden text-white shadow-soft-lg;
+    background:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.35), transparent 55%),
+      linear-gradient(135deg, #6D5BF7 0%, #9A6BF5 35%, #4FC4E8 70%, #4ADEA2 100%);
+    background-size: 180% 180%;
+    animation: aurora 22s ease infinite;
+  }
+  .hero-card .eyebrow { @apply text-white/70; }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
 
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  /* Glow — softened for light theme */
+  .glow-primary { box-shadow: 0 0 40px rgba(91, 91, 246, 0.28); }
+  .glow-success { box-shadow: 0 0 40px rgba(0, 212, 168, 0.28); }
 
-  /* Glow effects */
-  .glow-primary {
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
-  }
-
-  .glow-success {
-    box-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
-  }
-
-  /* Gradient borders */
-  .gradient-border {
-    position: relative;
-  }
-
+  /* Gradient border */
+  .gradient-border { position: relative; }
   .gradient-border::before {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+    background: linear-gradient(135deg, #5B5BF6, #8B5CF6, #00D4A8);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
-    mask-composite: exclude;
+            mask-composite: exclude;
+    pointer-events: none;
   }
+
+  /* Escape hatch when actually-white text is required */
+  .text-on-dark { color: #FFFFFF !important; }
+
+  /* Micro-interactions */
+  .hover-lift { @apply transition-all duration-200 ease-out; }
+  .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
+  .press-scale { @apply transition-transform duration-150; }
+  .press-scale:active { transform: scale(0.97); }
+
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  /* Divider label (for "or continue with" style rows) */
+  .hr-label {
+    @apply relative flex items-center text-xs uppercase tracking-[0.14em] text-neutral-400;
+  }
+  .hr-label::before, .hr-label::after {
+    content: '';
+    @apply flex-1 h-px bg-dark-700;
+  }
+  .hr-label::before { @apply mr-4; }
+  .hr-label::after  { @apply ml-4; }
 }
 
-/* Animations */
+/* ────── Keyframes ────── */
 @keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
-  }
+  0%, 100% { box-shadow: 0 0 20px rgba(91, 91, 246, 0.25); }
+  50%      { box-shadow: 0 0 40px rgba(91, 91, 246, 0.45); }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes aurora {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
 }
 
 .animate-shimmer {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.05),
+    rgba(91, 91, 246, 0.08),
     transparent
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
+}
+
+/*
+ * Light-theme compat shim for legacy `text-white` usage.
+ * Declared as plain CSS (not inside @layer) so it cascades after Tailwind's
+ * utility definitions without triggering @apply circular-dependency errors.
+ *
+ * Strategy: default text-white to near-black (so it reads on white cards),
+ * then restore real white wherever it sits inside a colored/gradient surface.
+ */
+[class~="text-white"] { color: #0B0E14; }
+
+/* Saturated / gradient backgrounds — restore white foreground */
+[class*="bg-gradient-to"] [class~="text-white"],
+[class*="bg-gradient-to"][class~="text-white"],
+[class*="from-primary-5"] [class~="text-white"],
+[class*="from-primary-6"] [class~="text-white"],
+[class*="from-primary-7"] [class~="text-white"],
+[class*="from-accent-5"]  [class~="text-white"],
+[class*="from-accent-6"]  [class~="text-white"],
+[class*="from-emerald"]   [class~="text-white"],
+[class*="from-amber"]     [class~="text-white"],
+[class*="from-red"]       [class~="text-white"],
+[class*="from-rose"]      [class~="text-white"],
+[class*="from-violet"]    [class~="text-white"],
+[class*="from-purple"]    [class~="text-white"],
+[class*="from-blue"]      [class~="text-white"],
+[class*="from-indigo"]    [class~="text-white"],
+.btn-primary, .btn-primary [class~="text-white"],
+.btn-gradient, .btn-gradient [class~="text-white"],
+.btn-dark, .btn-dark [class~="text-white"],
+.tab-button-active, .tab-button-active [class~="text-white"],
+.card-hero, .card-hero *, .card-hero [class~="text-white"] {
+  color: #FFFFFF;
 }
